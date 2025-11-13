@@ -8,28 +8,6 @@ __pycache__/
 venv/
 env/
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-
-# Unit test / coverage reports
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-
-# Tooling caches
-.mypy_cache/
-.ruff_cache/
-.ipynb_checkpoints/
-
-# IDEs and editors
-.idea/
-.vscode/
-
-# OS files
-.DS_Store
-Thumbs.db
+.env
 
 
