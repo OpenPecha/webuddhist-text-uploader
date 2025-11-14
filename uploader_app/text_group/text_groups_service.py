@@ -1,0 +1,110 @@
+from typing import Any
+
+from uploader_app.text_group.text_group_repository import get_texts, get_text_groups, post_group
+from uploader_app.config import TextType
+from uploader_app.text_group.text_group_model import TextGroupPayload
+
+
+class TextGroupsService:
+    def __init__(self):
+        self.version_group_id = None
+        self.commentary_group_id = None
+        
+    async def upload_text_groups(self) -> dict[str, list[dict[str, Any]]]:
+        texts = await self.get_text_groups_service()
+        text = texts[0]
+
+        # Fetch all groups for the selected text.
+        text_groups = await get_text_groups(text["id"])
+
+        # Group them by type for downstream use.
+        # Remove any group with type 'translation_source' from text_groups
+        filtered_text_groups = [group for group in text_groups["texts"] if group.get("type") != TextType.TRANSLATION_SOURCE.value]
+        grouped_text_by_type=  self.group_texts_by_type({"texts": filtered_text_groups})
+
+        #upload text groups to webuddhist backend
+        for key in grouped_text_by_type.keys():
+                group_response = await post_group(key)
+                if key == "text":
+                    self.version_group_id = group_response["id"]
+                elif key == "commentary":
+                    self.commentary_group_id = group_response["id"]
+
+        for text in grouped_text_by_type["text"]:
+            text_payload = self._filter_text_groups(text, self.version_group_id, type='version')
+            print("text payload version>>>>>>>>>>>>>>>>>>>>>>>>>",text_payload)
+        for text in grouped_text_by_type["commentary"]:
+            text_payload = self._filter_text_groups(text, self.commentary_group_id, type='commentary')
+            print("text payload commentary>>>>>>>>>>>>>>>>>>>>>>>>>",text_payload)
+
+
+
+    async def get_text_groups_service(self, type: str | None = None):
+        return await get_texts(type)
+
+    def _filter_text_groups(self, text: dict[str, Any], group_id: str, type: TextType) -> TextGroupPayload:
+        """
+        Normalise the raw text-group item coming from OpenPecha into a
+        `TextGroupPayload`.
+
+        Some fields (like `title`) can be language maps, e.g.
+        `{"lzh": "Translated Title"}`. Pydantic expects a simple string,
+        so we pick a sensible default language or fall back to the first value.
+        """
+        raw_title = text.get("title")
+
+        # `title` can be either a plain string or a mapping of language → string.
+        if isinstance(raw_title, dict):
+            # Prefer a couple of common keys, otherwise take the first available.
+            preferred_langs = ["bo", "en", "lzh"]
+            title_value = None
+            for lang in preferred_langs:
+                if lang in raw_title and isinstance(raw_title[lang], str):
+                    title_value = raw_title[lang]
+                    break
+
+            if title_value is None and raw_title:
+                # Take the first string value from the dict.
+                first_value = next(iter(raw_title.values()))
+                if isinstance(first_value, str):
+                    title_value = first_value
+            raw_title = title_value
+
+        return TextGroupPayload(
+            pecha_text_id=text.get("id"),
+            title=raw_title,
+            language=text.get("language"),
+            isPublished=text.get("isPublished", False),
+            group_id=group_id,
+            published_by=text.get("published_by"),
+            type=type,
+            categories=text.get("categories"),
+            views=text.get("views", 0),
+            source_link=text.get("source_link"),
+            ranking=text.get("ranking"),
+            license=text.get("license"),
+        )
+
+    def group_texts_by_type(
+        self, groups_payload: dict[str, Any]
+    ) -> dict[str, list[dict[str, Any]]]:
+        
+        texts = groups_payload.get("texts", [])
+
+        versions: list[dict[str, Any]] = []
+        commentaries: list[dict[str, Any]] = []
+
+        for item in texts:
+            item_type = item.get("type")
+
+            # Only keep root and translation in versions.
+            if item_type in {TextType.TRANSLATION.value, TextType.ROOT.value}:
+                versions.append(item)
+            elif item_type == TextType.COMMENTARY.value:
+                commentaries.append(item)
+
+        return {
+            "text": versions,
+            "commentary": commentaries,
+        }
+
