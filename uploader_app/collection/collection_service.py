@@ -6,16 +6,8 @@ from uploader_app.config import OpenPechaAPIURL, COLLECTION_LANGUAGES
 class CollectionService:
 
     def upload_collections(self):
-        """
-        Entry point for building the collection payload tree.
 
-        This will:
-        - Fetch top‑level collections (no `parent_id`)
-        - Recursively fetch and attach child collections for any collection that
-          reports `has_sub_child` / `has_child` from the API.
-        """
-        # 1) Build the multilingual tree (one node per logical collection).
-        multilingual_tree = self.build_recursive_multilingual_payloads()
+        self.build_recursive_multilingual_payloads()
 
 
     def get_collections_service(self, parent_id: str | None = None):
@@ -27,14 +19,7 @@ class CollectionService:
     def build_recursive_multilingual_payloads(
         self, parent_id: str | None = None
     ) -> list[dict[str, Any]]:
-        """
-        Recursively build multilingual payloads starting from the given parent.
-
-        For the root call (`parent_id=None`), this returns a list of top‑level
-        collections. For each collection that has children, a `children` key is
-        added containing the same multilingual payload structure for its
-        sub‑collections.
-        """
+    
         # Fetch collections for this level from the remote API.
         collections_by_language = self.get_collections_service(parent_id=parent_id)
 
@@ -153,8 +138,6 @@ class CollectionService:
                     id_key = str(raw_id)
 
                 # --- Parent / child flags ---------------------------------------
-                # Support both the old (`parent_id`, `has_sub_child`) and the new
-                # (`parent`, `has_child`) field names.
                 parent_value = collection.get("parent_id", collection.get("parent"))
                 has_sub_child_value = collection.get(
                     "has_sub_child", collection.get("has_child")
@@ -172,9 +155,6 @@ class CollectionService:
                     }
 
                 # --- Titles / descriptions --------------------------------------
-                # Prefer simple `title` / `description` fields from the API. If the
-                # API already returns language-keyed maps (`titles`, `descriptions`),
-                # fall back to those.
                 title_value = collection.get("title")
                 if title_value is None:
                     title_value = collection.get("titles", {}).get(language)
