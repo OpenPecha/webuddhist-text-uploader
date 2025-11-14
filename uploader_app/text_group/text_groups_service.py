@@ -1,6 +1,11 @@
 from typing import Any
 
-from uploader_app.text_group.text_group_repository import get_texts, get_text_groups, post_group
+from uploader_app.text_group.text_group_repository import (
+    get_texts, 
+    get_text_groups, 
+    post_group, 
+    get_critical_instances
+)
 from uploader_app.config import TextType
 from uploader_app.text_group.text_group_model import TextGroupPayload
 
@@ -22,19 +27,20 @@ class TextGroupsService:
         filtered_text_groups = [group for group in text_groups["texts"] if group.get("type") != TextType.TRANSLATION_SOURCE.value]
         grouped_text_by_type=  self.group_texts_by_type({"texts": filtered_text_groups})
 
-        #upload text groups to webuddhist backend
+        #upload groups to webuddhist backend
         for key in grouped_text_by_type.keys():
                 group_response = await post_group(key)
                 if key == "text":
                     self.version_group_id = group_response["id"]
                 elif key == "commentary":
                     self.commentary_group_id = group_response["id"]
-
+        
+        #upload text to webuddhist backend
         for text in grouped_text_by_type["text"]:
-            text_payload = self._filter_text_groups(text, self.version_group_id, type='version')
+            text_payload = await self._filter_text_groups(text, self.version_group_id, type='version')
             print("text payload version>>>>>>>>>>>>>>>>>>>>>>>>>",text_payload)
         for text in grouped_text_by_type["commentary"]:
-            text_payload = self._filter_text_groups(text, self.commentary_group_id, type='commentary')
+            text_payload = await self._filter_text_groups(text, self.commentary_group_id, type='commentary')
             print("text payload commentary>>>>>>>>>>>>>>>>>>>>>>>>>",text_payload)
 
 
@@ -42,20 +48,15 @@ class TextGroupsService:
     async def get_text_groups_service(self, type: str | None = None):
         return await get_texts(type)
 
-    def _filter_text_groups(self, text: dict[str, Any], group_id: str, type: TextType) -> TextGroupPayload:
-        """
-        Normalise the raw text-group item coming from OpenPecha into a
-        `TextGroupPayload`.
+    async def _filter_text_groups(self, text: dict[str, Any], group_id: str, type: TextType) -> TextGroupPayload:
+        # Fetch critical instances for this text so we can map ID and source.
+        critical_instances = await get_critical_instances(text["id"])
 
-        Some fields (like `title`) can be language maps, e.g.
-        `{"lzh": "Translated Title"}`. Pydantic expects a simple string,
-        so we pick a sensible default language or fall back to the first value.
-        """
+        critical_instance = critical_instances[0]
+
         raw_title = text.get("title")
 
-        # `title` can be either a plain string or a mapping of language → string.
         if isinstance(raw_title, dict):
-            # Prefer a couple of common keys, otherwise take the first available.
             preferred_langs = ["bo", "en", "lzh"]
             title_value = None
             for lang in preferred_langs:
@@ -71,7 +72,7 @@ class TextGroupsService:
             raw_title = title_value
 
         return TextGroupPayload(
-            pecha_text_id=text.get("id"),
+            pecha_text_id=critical_instance["id"],
             title=raw_title,
             language=text.get("language"),
             isPublished=text.get("isPublished", False),
@@ -80,7 +81,7 @@ class TextGroupsService:
             type=type,
             categories=text.get("categories"),
             views=text.get("views", 0),
-            source_link=text.get("source_link"),
+            source_link=critical_instance["source"],
             ranking=text.get("ranking"),
             license=text.get("license"),
         )
