@@ -5,14 +5,18 @@ from uploader_app.config import OpenPechaAPIURL, COLLECTION_LANGUAGES
 class CollectionService:
 
     def upload_collections(self):
-        # Step 1: fetch top most collections from the remote API
-        collections_by_language = self.get_collections_service()
+        """
+        Entry point for building the collection payload tree.
 
-        # Step 2: build the multilingual payload, combining entries that share the
-        # same `_id` into a single document with language-keyed `titles` and
-        # `descriptions`.
-        multilingual_payload = self.build_multilingual_payload(collections_by_language)
-        print(multilingual_payload)
+        This will:
+        - Fetch top‑level collections (no `parent_id`)
+        - Recursively fetch and attach child collections for any collection that
+          reports `has_sub_child` / `has_child` from the API.
+        """
+
+        multilingual_payloads = self.build_recursive_multilingual_payloads()
+        flattened_payloads = self.flatten_recursive_multilingual_payloads(multilingual_payloads)
+        print(flattened_payloads)
 
 
     def get_collections_service(self, parent_id: str | None = None):
@@ -20,6 +24,81 @@ class CollectionService:
             OpenPechaAPIURL.DEVELOPMENT.value, COLLECTION_LANGUAGES,
             parent_id=parent_id
         )
+
+    def build_recursive_multilingual_payloads(
+        self, parent_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        """
+        Recursively build multilingual payloads starting from the given parent.
+
+        For the root call (`parent_id=None`), this returns a list of top‑level
+        collections. For each collection that has children, a `children` key is
+        added containing the same multilingual payload structure for its
+        sub‑collections.
+        """
+        # Fetch collections for this level
+        collections_by_language = self.get_collections_service(parent_id=parent_id)
+
+        # Build the multilingual payload for the current level
+        multilingual_payloads = self.build_multilingual_payload(
+            collections_by_language
+        )
+
+        # For each payload that has children, fetch and attach them recursively.
+        for payload in multilingual_payloads:
+            has_sub_child = payload.get("has_sub_child") or payload.get("has_child")
+
+            if not has_sub_child:
+                payload["children"] = []
+                continue
+
+            # Normalise the ID that should be used as `parent_id` for the next level
+            raw_id = payload.get("pecha_collection_id")
+            next_parent_id: str | None
+            if isinstance(raw_id, dict) and "$oid" in raw_id:
+                next_parent_id = str(raw_id["$oid"])
+            elif raw_id is not None:
+                next_parent_id = str(raw_id)
+            else:
+                next_parent_id = None
+
+            # If we don't have a usable parent id, we can't descend further.
+            if next_parent_id is None:
+                payload["children"] = []
+                continue
+
+            payload["children"] = self.build_recursive_multilingual_payloads(
+                parent_id=next_parent_id
+            )
+
+        return multilingual_payloads
+
+    def flatten_recursive_multilingual_payloads(
+        self, recursive_payloads: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """
+        Flatten a tree of multilingual payloads (with `children`) into a single
+        list.
+
+        Each node in the returned list is a shallow copy of the original payload
+        without the `children` key, so that it can easily be used in contexts
+        that expect a flat collection list (e.g. bulk upload).
+        """
+        flat: list[dict[str, Any]] = []
+
+        def _flatten(nodes: list[dict[str, Any]]) -> None:
+            for node in nodes:
+                children = node.get("children") or []
+
+                # Copy everything except `children` for the flat representation
+                flat_node = {key: value for key, value in node.items() if key != "children"}
+                flat.append(flat_node)
+
+                if children:
+                    _flatten(children)
+
+        _flatten(recursive_payloads)
+        return flat
 
     def build_multilingual_payload(
         self, collections_by_language: list[dict[str, Any]]
@@ -88,16 +167,7 @@ class CollectionService:
             language = entry["language"]
             for collection in entry["collections"]:
                 # --- ID handling -------------------------------------------------
-                # Upstream API sometimes returns `_id` (Mongo-style) and in other
-                # cases returns a plain `id` field (as in your example).
-                raw_id = collection.get("_id")
-                if raw_id is None:
-                    raw_id = collection.get("id")
-
-                # If we *still* don't have an ID, skip this record – we can't
-                # reliably merge it across languages.
-                if raw_id is None:
-                    continue
+                raw_id = collection.get("id")
 
                 # Normalise ID to a string key, while preserving the original value
                 if isinstance(raw_id, dict) and "$oid" in raw_id:
@@ -115,7 +185,7 @@ class CollectionService:
 
                 if id_key not in combined:
                     combined[id_key] = {
-                        "collection_id": raw_id,
+                        "pecha_collection_id": raw_id,
                         "slug": collection.get("slug"),
                         "titles": {},
                         # Always initialise description keys for all configured languages.
