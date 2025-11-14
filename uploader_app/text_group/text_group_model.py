@@ -10,12 +10,9 @@ class TextGroupPayload(BaseModel):
     isPublished: bool = False
     group_id: Optional[str] = None
     published_by: Optional[str] = None
-
     type: str
     categories: Optional[List[str]] = None
     views: Optional[int] = 0
     source_link: Optional[str] = None
     ranking: Optional[int] = None
     license: Optional[str] = None
-
-    model_config = {"use_enum_values": True}

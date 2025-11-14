@@ -21,19 +21,14 @@ async def get_texts(type: str|None = None) -> list[dict[str, Any]]:
 
 
 async def get_text_groups(text_id: str) -> list[dict[str, Any]]:
-    """
-    Retrieve the list of groups for a given text from the OpenPecha API.
-
-    Performs a GET request to:
-
-        {OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/group
-    """
+    
     groups_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/group"
 
     response = await asyncio.to_thread(requests.get, groups_url)
     response.raise_for_status()
 
     return response.json()
+
 
 async def post_group(type: str) -> None:
 
@@ -61,5 +56,20 @@ async def post_group(type: str) -> None:
             f"body={response.text}"
         )
         response.raise_for_status()
+
+    return response.json()
+
+
+async def get_critical_instances(text_id: str) -> list[dict[str, Any]]:
+   
+    instances_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/instances"
+    params = {"instance_type": "critical"}
+
+    response = await asyncio.to_thread(
+        requests.get,
+        instances_url,
+        params=params,
+    )
+    response.raise_for_status()
 
     return response.json()
