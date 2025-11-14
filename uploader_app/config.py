@@ -8,7 +8,11 @@ APPLICATION = "webuddhist"
 
 COLLECTION_LANGUAGES = ["bo", "en"]
 
-TEXT_TYPE = ["version", "commentary"]
+class TextType(Enum):
+    COMMENTARY = "commentary"
+    ROOT = "root"
+    TRANSLATION = "translation"
+    TRANSLATION_SOURCE = "translation_source"
 
 class OpenPechaAPIURL(Enum):
     DEVELOPMENT = "https://api-l25bgmwqoa-uc.a.run.app"
