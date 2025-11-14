@@ -58,7 +58,7 @@ async def get_collections(
     return all_collections
 
 
-async def post_collections(language: str, collections: CollectionPayload) -> None:
+async def post_collections(language: str, collections: CollectionPayload) -> dict[str, Any]:
     url = f"{DestinationURL.LOCAL.value}/collections"
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -78,9 +78,10 @@ async def post_collections(language: str, collections: CollectionPayload) -> Non
 
     if not response.ok:
         print(
-            f">>>>>>>>>>>>>>>>>>>>>>>>>>>>cleared POST /collections failed "
+            f"POST /collections failed "
             f"(language={language}) status={response.status_code} "
             f"body={response.text}"
         )
+        response.raise_for_status()
 
-    response.raise_for_status()
+    return response.json()
