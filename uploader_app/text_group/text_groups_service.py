@@ -1,10 +1,11 @@
 from typing import Any
 
 from uploader_app.text_group.text_group_repository import (
-    get_texts, 
-    get_text_groups, 
-    post_group, 
-    get_critical_instances
+    get_texts,
+    get_text_groups,
+    post_group,
+    get_critical_instances,
+    post_text,
 )
 from uploader_app.config import TextType
 from uploader_app.text_group.text_group_model import TextGroupPayload
@@ -12,9 +13,9 @@ from uploader_app.text_group.text_group_model import TextGroupPayload
 
 class TextGroupsService:
     def __init__(self):
-        self.version_group_id = None
-        self.commentary_group_id = None
-        
+        self.version_group_id: str | None = None
+        self.commentary_group_id: str | None = None
+
     async def upload_text_groups(self) -> dict[str, list[dict[str, Any]]]:
         texts = await self.get_text_groups_service()
         text = texts[0]
@@ -24,31 +25,44 @@ class TextGroupsService:
 
         # Group them by type for downstream use.
         # Remove any group with type 'translation_source' from text_groups
-        filtered_text_groups = [group for group in text_groups["texts"] if group.get("type") != TextType.TRANSLATION_SOURCE.value]
-        grouped_text_by_type=  self.group_texts_by_type({"texts": filtered_text_groups})
+        filtered_text_groups = [
+            group
+            for group in text_groups["texts"]
+            if group.get("type") != TextType.TRANSLATION_SOURCE.value
+        ]
+        grouped_text_by_type = self.group_texts_by_type({"texts": filtered_text_groups})
 
-        #upload groups to webuddhist backend
+        # Upload groups to webuddhist backend
         for key in grouped_text_by_type.keys():
-                group_response = await post_group(key)
-                if key == "text":
-                    self.version_group_id = group_response["id"]
-                elif key == "commentary":
-                    self.commentary_group_id = group_response["id"]
-        
-        #upload text to webuddhist backend
+            group_response = await post_group(key)
+            if key == "text":
+                self.version_group_id = group_response["id"]
+            elif key == "commentary":
+                self.commentary_group_id = group_response["id"]
+
+        # Upload texts to webuddhist backend
         for text in grouped_text_by_type["text"]:
-            text_payload = await self._filter_text_groups(text, self.version_group_id, type='version')
-            print("text payload version>>>>>>>>>>>>>>>>>>>>>>>>>",text_payload)
+            text_payload = await self._filter_text_groups(
+                text, self.version_group_id, type="version"
+            )
+            text_response = await post_text(text_payload)
+            print("text response version>>>>>>>>>>>>>>>>>>>>>>>>>",text_response)
+
         for text in grouped_text_by_type["commentary"]:
-            text_payload = await self._filter_text_groups(text, self.commentary_group_id, type='commentary')
-            print("text payload commentary>>>>>>>>>>>>>>>>>>>>>>>>>",text_payload)
+            text_payload = await self._filter_text_groups(
+                text, self.commentary_group_id, type="commentary"
+            )
+            text_response = await post_text(text_payload)
+            print("text response commentary>>>>>>>>>>>>>>>>>>>>>>>>>",text_response)
 
-
+        return grouped_text_by_type
 
     async def get_text_groups_service(self, type: str | None = None):
         return await get_texts(type)
 
-    async def _filter_text_groups(self, text: dict[str, Any], group_id: str, type: TextType) -> TextGroupPayload:
+    async def _filter_text_groups(
+        self, text: dict[str, Any], group_id: str | None, type: str
+    ) -> TextGroupPayload:
         # Fetch critical instances for this text so we can map ID and source.
         critical_instances = await get_critical_instances(text["id"])
 
@@ -71,15 +85,16 @@ class TextGroupsService:
                     title_value = first_value
             raw_title = title_value
 
+        categories = [text.get("categories")] if text.get("categories") else []
         return TextGroupPayload(
             pecha_text_id=critical_instance["id"],
             title=raw_title,
             language=text.get("language"),
             isPublished=text.get("isPublished", False),
             group_id=group_id,
-            published_by=text.get("published_by"),
+            published_by="",
             type=type,
-            categories=text.get("categories"),
+            categories=categories,
             views=text.get("views", 0),
             source_link=critical_instance["source"],
             ranking=text.get("ranking"),
@@ -89,7 +104,6 @@ class TextGroupsService:
     def group_texts_by_type(
         self, groups_payload: dict[str, Any]
     ) -> dict[str, list[dict[str, Any]]]:
-        
         texts = groups_payload.get("texts", [])
 
         versions: list[dict[str, Any]] = []
@@ -108,4 +122,3 @@ class TextGroupsService:
             "text": versions,
             "commentary": commentaries,
         }
-

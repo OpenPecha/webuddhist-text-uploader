@@ -4,15 +4,15 @@ import asyncio
 import requests
 
 from uploader_app.config import OpenPechaAPIURL, DestinationURL, ACCESS_TOKEN
+from uploader_app.text_group.text_group_model import TextGroupPayload
 
 
-async def get_texts(type: str|None = None) -> list[dict[str, Any]]:
-    
+async def get_texts(type: str | None = None) -> list[dict[str, Any]]:
     texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts"
 
     # `requests` is synchronous; run it in a thread so callers can still await.
     params = {
-        "type": type
+        "type": type,
     }
     response = await asyncio.to_thread(requests.get, texts_url, params=params)
     response.raise_for_status()
@@ -21,7 +21,6 @@ async def get_texts(type: str|None = None) -> list[dict[str, Any]]:
 
 
 async def get_text_groups(text_id: str) -> list[dict[str, Any]]:
-    
     groups_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/group"
 
     response = await asyncio.to_thread(requests.get, groups_url)
@@ -30,22 +29,24 @@ async def get_text_groups(text_id: str) -> list[dict[str, Any]]:
     return response.json()
 
 
-async def post_group(type: str) -> None:
-
+async def post_group(type: str) -> dict[str, Any]:
+    """
+    Create a text group in the destination (webuddhist) backend.
+    """
     url = f"{DestinationURL.LOCAL.value}/groups"
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
     payload = {
-        "type": type
+        "type": type,
     }
-    
+
     response = await asyncio.to_thread(
-        requests.post, 
-        url, 
-        headers=headers, 
-        json=payload
+        requests.post,
+        url,
+        headers=headers,
+        json=payload,
     )
 
     if not response.ok:
@@ -59,9 +60,7 @@ async def post_group(type: str) -> None:
 
     return response.json()
 
-
 async def get_critical_instances(text_id: str) -> list[dict[str, Any]]:
-   
     instances_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/instances"
     params = {"instance_type": "critical"}
 
@@ -71,5 +70,32 @@ async def get_critical_instances(text_id: str) -> list[dict[str, Any]]:
         params=params,
     )
     response.raise_for_status()
+
+    return response.json()
+
+
+async def post_text(text_payload: TextGroupPayload) -> dict[str, Any]:
+
+    url = f"{DestinationURL.LOCAL.value}/texts"
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    payload = text_payload.model_dump()
+
+    response = await asyncio.to_thread(
+        requests.post,
+        url,
+        headers=headers,
+        json=payload,
+    )
+
+    if not response.ok:
+        print(
+            f"POST /texts failed "
+            f"(status={response.status_code}) "
+            f"body={response.text}"
+        )
+        response.raise_for_status()
 
     return response.json()
