@@ -7,10 +7,10 @@ from uploader_app.text_group.text_groups_service import TextGroupsService
 async def pipeline():
 
     #collection upload
-    collection = CollectionService()
-    await collection.upload_collections()
+    # collection = CollectionService()
+    # await collection.upload_collections()
 
-    print("collection uploaded successfully")
+    # print("collection uploaded successfully")
 
     #text group upload
     text_group = TextGroupsService()

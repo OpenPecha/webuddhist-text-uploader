@@ -85,3 +85,24 @@ async def post_collections(language: str, collections: CollectionPayload) -> dic
         response.raise_for_status()
 
     return response.json()
+
+
+async def get_collection_by_pecha_collection_id(
+    pecha_collection_id: str,
+) -> dict[str, Any]:
+    
+    url = f"{DestinationURL.LOCAL.value}/collections/{pecha_collection_id}"
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+    # `requests` is synchronous; run it in a thread so callers can still await.
+    response = await asyncio.to_thread(
+        requests.get,
+        url,
+        headers=headers
+    )
+    response.raise_for_status()
+
+    return response.json()
