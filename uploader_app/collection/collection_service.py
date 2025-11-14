@@ -189,7 +189,7 @@ class CollectionService:
                         "slug": collection.get("slug"),
                         "titles": {},
                         # Always initialise description keys for all configured languages.
-                        "description": {lang: "" for lang in COLLECTION_LANGUAGES},
+                        "descriptions": {lang: "" for lang in COLLECTION_LANGUAGES},
                         "parent_id": parent_value,
                         "has_sub_child": has_sub_child_value,
                     }
