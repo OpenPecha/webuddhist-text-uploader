@@ -1,33 +1,46 @@
 from typing import Any
-from uploader_app.collection.collection_repository import get_collections
+from uploader_app.collection.collection_repository import get_collections, post_collections
 from uploader_app.config import OpenPechaAPIURL, COLLECTION_LANGUAGES
+from uploader_app.collection.collection_model import CollectionPayload
 
 
 class CollectionService:
 
-    def upload_collections(self):
+    async def upload_collections(self):
 
-        self.build_recursive_multilingual_payloads()
+        await self.build_recursive_multilingual_payloads()
 
 
-    def get_collections_service(self, parent_id: str | None = None):
-        return get_collections(
+    async def get_collections_service(self, parent_id: str | None = None):
+        return await get_collections(
             OpenPechaAPIURL.DEVELOPMENT.value, COLLECTION_LANGUAGES,
             parent_id=parent_id
         )
 
-    def build_recursive_multilingual_payloads(
+    async def build_recursive_multilingual_payloads(
         self, parent_id: str | None = None
     ) -> list[dict[str, Any]]:
     
         # Fetch collections for this level from the remote API.
-        collections_by_language = self.get_collections_service(parent_id=parent_id)
+        collections_by_language = await self.get_collections_service(parent_id=parent_id)
 
-        # Build the multilingual payload for the current level.
-        multilingual_payloads = self.build_multilingual_payload(
-            collections_by_language
-        )
-        print(multilingual_payloads, "\n\n\n")
+        # Build the multilingual payload for the current level. This returns one
+        # combined payload per `pecha_collection_id`, where `titles` and
+        # `descriptions` contain entries for all languages.
+        multilingual_payloads = self.build_multilingual_payload(collections_by_language)
+
+        for payload in multilingual_payloads:
+            collection_model = CollectionPayload(
+                pecha_collection_id=payload.get("pecha_collection_id"),
+                slug=payload.get("slug"),
+                titles=payload.get("titles"),
+                descriptions=payload.get("descriptions"),
+                parent_id=payload.get("parent_id"),
+            )
+            # Upload to webuddhist backend. We send the full multilingual
+            # payload body, and use "en" as the request language context.
+            print(">>>>>>>>>>>>>>>>>>>", collection_model)
+            await post_collections("en", collection_model)
         # For each payload that has children, fetch and attach them recursively.
         for payload in multilingual_payloads:
             has_sub_child = payload.get("has_sub_child") or payload.get("has_child")
@@ -51,7 +64,8 @@ class CollectionService:
                 payload["children"] = []
                 continue
 
-            payload["children"] = self.build_recursive_multilingual_payloads(
+            # Recurse asynchronously for the next level.
+            payload["children"] = await self.build_recursive_multilingual_payloads(
                 parent_id=next_parent_id
             )
 
@@ -62,8 +76,8 @@ class CollectionService:
         self, collections_by_language: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
         """
-        Create a payload that combines collections with the same `_id` across
-        multiple languages into a single multilingual document.
+        Create a payload that combines collections with the same ID across
+        multiple languages into a **single multilingual document per ID**.
 
         Input (from `get_collections`):
 
@@ -98,29 +112,22 @@ class CollectionService:
             },
         ]
 
-        Output (per-language list):
+        Output (one combined payload per `pecha_collection_id`):
 
-        [
             {
-                "language": "en",
-                "pecha_collection_id": {"$oid": "..."},
-                "slug": "Liturgy",
-                "titles": {"en": "Liturgy"},
-                "descriptions": {"en": "Prayers and rituals"},
+                "pecha_collection_id": "sfsfsf-sfsdf",
+                "slug": "Madhyamaka",
+                "titles": {
+                    "en": "Madhyamaka",
+                    "bo": "དབུ་མ།"
+                },
+                "descriptions": {
+                    "en": "Madhyamaka treatises",
+                    "bo": "དབུ་མའི་གཞུང་སྣ་ཚོགས།"
+                },
                 "parent_id": null,
-                "has_sub_child": true,
-            },
-            {
-                "language": "bo",
-                "pecha_collection_id": {"$oid": "..."},
-                "slug": "Liturgy",
-                "titles": {"bo": "ཁ་འདོན།"},
-                "descriptions": {"bo": "ཆོ་ག་དང་འདོན་ཆ།"},
-                "parent_id": null,
-                "has_sub_child": true,
-            },
-            ...
-        ]
+                "has_sub_child": true | false
+            }
         """
 
         combined: dict[str, dict[str, Any]] = {}
@@ -129,9 +136,12 @@ class CollectionService:
             language = entry["language"]
             for collection in entry["collections"]:
                 # --- ID handling -------------------------------------------------
-                raw_id = collection.get("id")
+                # Prefer `id`, fall back to `_id` if necessary.
+                raw_id = collection.get("id", collection.get("_id"))
 
-                # Normalise ID to a string key, while preserving the original value
+                # Normalise ID to a string key, and also store this as
+                # `pecha_collection_id` so that the final payload field is a
+                # simple string (as in the desired output example).
                 if isinstance(raw_id, dict) and "$oid" in raw_id:
                     id_key = str(raw_id["$oid"])
                 else:
@@ -145,7 +155,7 @@ class CollectionService:
 
                 if id_key not in combined:
                     combined[id_key] = {
-                        "pecha_collection_id": raw_id,
+                        "pecha_collection_id": id_key,
                         "slug": collection.get("slug"),
                         "titles": {},
                         # Always initialise description keys for all configured languages.
@@ -181,82 +191,8 @@ class CollectionService:
                         combined[id_key]["descriptions"] = {}
                     combined[id_key]["descriptions"][language] = description_value
 
-        # First, collapse all languages into combined multilingual nodes, then
-        # expand back out into the desired per-language payload format.
-        combined_list = list(combined.values())
-        return self.expand_to_per_language_payloads(combined_list)
-
-    # ------------------------------------------------------------------
-    # Helpers for per-language expansion
-    # ------------------------------------------------------------------
-
-    def expand_to_per_language_payloads(
-        self, multilingual_collections: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
-        """
-        Convert combined multilingual collection entries into a list of
-        per-language payloads with this shape:
-
-            {
-                "pecha_collection_Id": "<id>",
-                "parent": "<parent_id>" | null,
-                "slug": "<english-title>",
-                "language": "<lang>",
-                "title": { "<lang>": "<title>" },
-                "descriptions": { "<lang>": "<description>" } | {}
-            }
-
-        Each language present in `titles` becomes its own payload object.
-        """
-        per_language: list[dict[str, Any]] = []
-
-        for collection in multilingual_collections:
-            per_language.extend(
-                self._split_collection_by_language(collection)
-            )
-
-        return per_language
-
-    def _split_collection_by_language(
-        self, collection: dict[str, Any]
-    ) -> list[dict[str, Any]]:
-        """
-        Take a single multilingual collection node and split it into
-        multiple per-language payloads matching the desired format.
-        """
-        results: list[dict[str, Any]] = []
-        titles: dict[str, Any] = collection.get("titles", {})
-        descriptions: dict[str, Any] = collection.get("descriptions", {}) or {}
-
-        # Use the English title as the slug for all languages that share
-        # this pecha_collection_id. If no English title is present, fall
-        # back to the collection's existing slug.
-        english_title = titles.get("en")
-        slug_value = english_title or collection.get("slug")
-
-        for lang, title_value in titles.items():
-            payload: dict[str, Any] = {
-                # Match the desired external format for per-language payloads.
-                "pecha_collection_id": collection.get("pecha_collection_id"),
-                "parent_id": collection.get("parent_id"),
-                "slug": slug_value,
-                "language": lang,
-                "titles": {lang: title_value},
-                "descriptions": {},
-            }
-
-            # Preserve child information if present on the combined node.
-            if "has_sub_child" in collection:
-                payload["has_sub_child"] = collection["has_sub_child"]
-            elif "has_child" in collection:
-                payload["has_sub_child"] = collection["has_child"]
-
-            # Only set descriptions for this language if one is available.
-            desc_value = descriptions.get(lang)
-            if desc_value is not None:
-                payload["descriptions"][lang] = desc_value
-
-            results.append(payload)
-
-        return results
+        # Return the combined multilingual nodes directly – one payload per
+        # `pecha_collection_id`, with `titles` and `descriptions` merged across
+        # languages that share the same ID.
+        return list(combined.values())
 
