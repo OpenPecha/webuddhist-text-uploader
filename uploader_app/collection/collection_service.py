@@ -18,29 +18,57 @@ class CollectionService:
         )
 
     async def build_recursive_multilingual_payloads(
-        self, parent_id: str | None = None
+        self,
+        remote_parent_id: str | None = None,
+        local_parent_id: str | None = None,
     ) -> list[dict[str, Any]]:
-    
-        # Fetch collections for this level from the remote API.
-        collections_by_language = await self.get_collections_service(parent_id=parent_id)
+
+        # Fetch collections for this level from the remote (OpenPecha) API.
+        # This `remote_parent_id` is **only** for traversing the source tree.
+        collections_by_language = await self.get_collections_service(
+            parent_id=remote_parent_id
+        )
 
         # Build the multilingual payload for the current level. This returns one
         # combined payload per `pecha_collection_id`, where `titles` and
         # `descriptions` contain entries for all languages.
-        multilingual_payloads = self.build_multilingual_payload(collections_by_language)
+        multilingual_payloads = self.build_multilingual_payload(
+            collections_by_language
+        )
 
+        # First, upload collections at this level to the destination (webuddhist)
+        # backend, capturing the *destination* IDs so they can be used as
+        # `parent_id` for the next level.
         for payload in multilingual_payloads:
             collection_model = CollectionPayload(
                 pecha_collection_id=payload.get("pecha_collection_id"),
                 slug=payload.get("slug"),
                 titles=payload.get("titles"),
                 descriptions=payload.get("descriptions"),
-                parent_id=payload.get("parent_id"),
+                # Use the **local** parent_id (from previously created collection),
+                # not the source OpenPecha parent.
+                parent_id=local_parent_id,
             )
+
             # Upload to webuddhist backend. We send the full multilingual
             # payload body, and use "en" as the request language context.
-            print(">>>>>>>>>>>>>>>>>>>", collection_model)
-            await post_collections("en", collection_model)
+            response_data = await post_collections("en", collection_model)
+            print("collection response>>>>>>>>>>>>>>>>>>>>>>>>>",response_data)
+
+            # Extract the newly created destination collection ID so it can be
+            # used as the parent for this node's children.
+            raw_local_id = (
+                response_data.get("id")
+                or response_data.get("_id")
+                or response_data.get("collection_id")
+            )
+            if isinstance(raw_local_id, dict) and "$oid" in raw_local_id:
+                payload["local_id"] = str(raw_local_id["$oid"])
+            elif raw_local_id is not None:
+                payload["local_id"] = str(raw_local_id)
+            else:
+                payload["local_id"] = None
+
         # For each payload that has children, fetch and attach them recursively.
         for payload in multilingual_payloads:
             has_sub_child = payload.get("has_sub_child") or payload.get("has_child")
@@ -49,24 +77,31 @@ class CollectionService:
                 payload["children"] = []
                 continue
 
-            # Normalise the ID that should be used as `parent_id` for the next level
-            raw_id = payload.get("pecha_collection_id")
-            next_parent_id: str | None
-            if isinstance(raw_id, dict) and "$oid" in raw_id:
-                next_parent_id = str(raw_id["$oid"])
-            elif raw_id is not None:
-                next_parent_id = str(raw_id)
+            # Normalise the **remote/source** ID that should be used as
+            # `remote_parent_id` for the next level when talking to OpenPecha.
+            raw_remote_id = payload.get("pecha_collection_id")
+            next_remote_parent_id: str | None
+            if isinstance(raw_remote_id, dict) and "$oid" in raw_remote_id:
+                next_remote_parent_id = str(raw_remote_id["$oid"])
+            elif raw_remote_id is not None:
+                next_remote_parent_id = str(raw_remote_id)
             else:
-                next_parent_id = None
+                next_remote_parent_id = None
 
-            # If we don't have a usable parent id, we can't descend further.
-            if next_parent_id is None:
+            # If we don't have a usable remote parent id, we can't descend
+            # further in the source API.
+            if next_remote_parent_id is None:
                 payload["children"] = []
                 continue
 
+            # The *local* parent_id for children is the ID we just created in
+            # the destination backend for this node.
+            next_local_parent_id: str | None = payload.get("local_id")
+
             # Recurse asynchronously for the next level.
             payload["children"] = await self.build_recursive_multilingual_payloads(
-                parent_id=next_parent_id
+                remote_parent_id=next_remote_parent_id,
+                local_parent_id=next_local_parent_id,
             )
 
         return multilingual_payloads

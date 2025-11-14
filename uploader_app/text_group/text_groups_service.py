@@ -15,6 +15,7 @@ class TextGroupsService:
     def __init__(self):
         self.version_group_id: str | None = None
         self.commentary_group_id: str | None = None
+        self.text_ids: list[str] = []
 
     async def upload_text_groups(self) -> dict[str, list[dict[str, Any]]]:
         texts = await self.get_text_groups_service()
@@ -46,6 +47,7 @@ class TextGroupsService:
                 text, self.version_group_id, type="version"
             )
             text_response = await post_text(text_payload)
+            self.text_ids.append(text_response["id"])
             print("text response version>>>>>>>>>>>>>>>>>>>>>>>>>",text_response)
 
         for text in grouped_text_by_type["commentary"]:
@@ -53,6 +55,7 @@ class TextGroupsService:
                 text, self.commentary_group_id, type="commentary"
             )
             text_response = await post_text(text_payload)
+            self.text_ids.append(text_response["id"])
             print("text response commentary>>>>>>>>>>>>>>>>>>>>>>>>>",text_response)
 
         return grouped_text_by_type
