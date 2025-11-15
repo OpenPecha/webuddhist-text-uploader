@@ -84,22 +84,22 @@ async def post_segments(
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
-    payload: dict[str, Any] = {
-        "text_id": segments_payload["text_id"],
-        "segments": segments_payload["segments"],
-    }
+    # payload: dict[str, Any] = {
+    #     "text_id": segments_payload["text_id"],
+    #     "segments": segments_payload["segments"],
+    # }
 
     response = await asyncio.to_thread(
         requests.post,
         url,
         headers=headers,
-        json=payload,
+        json=segments_payload,
     )
 
     if not response.ok:
         print(
             "POST /segments failed "
-            f"(text_id={text_id}) status={response.status_code} "
+            f"(text_id={segments_payload['text_id']}) status={response.status_code} "
             f"body={response.text}"
         )
         response.raise_for_status()

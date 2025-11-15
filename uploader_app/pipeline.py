@@ -6,17 +6,17 @@ from uploader_app.segments.segment_service import SegmentService
 
 async def pipeline():
 
-    #collection upload
+    # collection upload
     # collection = CollectionService()
     # await collection.upload_collections()
 
     # print("collection uploaded successfully")
 
-    #text group upload
-    # text_group = TextGroupsService()
-    # await text_group.upload_text_groups()
+    # # text group upload
+    text_group = TextGroupsService()
+    await text_group.upload_text_groups()
 
-    # print("text group uploaded successfully")
+    print("text group uploaded successfully")
 
     # #segment upload
     segment = SegmentService()
