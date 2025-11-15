@@ -3,7 +3,8 @@ from typing import Any, List
 from pathlib import Path
 
 from uploader_app.segments.segment_respository import (
-    get_instances_by_pecha_text_id,
+    get_segments_annotation,
+    get_annotation_by_id
 )
 from uploader_app.config import TEXT_UPLOAD_LOG_FILE
 
@@ -15,22 +16,28 @@ class SegmentService:
         pecha_text_ids = await self.get_pecha_text_ids_from_csv()
         
         for pecha_text_id in pecha_text_ids:
-            instance = await self.get_segments_by_pecha_text_id(pecha_text_id)
-            segmentation_ids = self.get_segmentation_annotation_ids(instance)
-            print(
-                f"pecha_text_id={pecha_text_id}"
-                f"segmentation_annotation_ids={segmentation_ids}"
-            )
+            instance = await self.get_segments_annotationby_pecha_text_id(pecha_text_id)
+            annotation_ids = self.get_annotation_ids(instance)
+            segments = await self.get_segments_by_id_list(annotation_ids)
 
-    async def get_segments_by_pecha_text_id(
+            segments_content = self.upload_segments_content(segments, pecha_text_id)
+
+            
+            
+
+    def get_segments_content(self, segments: List[dict[str, Any]], pecha_text_id: str) -> List[dict[str, Any]]:
+        segments_content = []
+        for segment in segments:
+            segments_content.append(segment["content"])
+        return segments_content
+
+    async def get_segments_annotationby_pecha_text_id(
         self, pecha_text_id: str
     ) -> dict[str, Any]:
-        return await get_instances_by_pecha_text_id(pecha_text_id)
+        return await get_segments_annotation(pecha_text_id)
 
-    def get_segmentation_annotation_ids(self, instance: dict[str, Any]) -> list[str]:
+    def get_annotation_ids(self, instance: dict[str, Any]) -> list[str]:
         """
-        Extract all `annotation_id` values where annotation `type` is "segmentation".
-
         The `instance` object is expected to look like:
             {
                 "metadata": { ... },
@@ -64,3 +71,12 @@ class SegmentService:
                     pecha_ids.append(pecha_id)
 
         return pecha_ids
+
+
+    async def get_segments_by_id_list(self, annotation_ids: str) -> List[dict[str, Any]]:
+        annotations: List[dict[str, Any]] = []
+        for annotation_id in annotation_ids:
+            annotation = await get_annotation_by_id(annotation_id)
+            print(">>>>>>>>>>>>>>>>>>>>>>",annotation)
+            annotations.append(annotation["data"])
+        return annotations
