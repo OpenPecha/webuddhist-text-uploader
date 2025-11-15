@@ -75,22 +75,11 @@ class TextGroupsService:
 
         critical_instance = critical_instances[0]
 
-        raw_title = text.get("title")
+        raw_title = ''
 
-        if isinstance(raw_title, dict):
-            preferred_langs = ["bo", "en", "lzh"]
-            title_value = None
-            for lang in preferred_langs:
-                if lang in raw_title and isinstance(raw_title[lang], str):
-                    title_value = raw_title[lang]
-                    break
-
-            if title_value is None and raw_title:
-                # Take the first string value from the dict.
-                first_value = next(iter(raw_title.values()))
-                if isinstance(first_value, str):
-                    title_value = first_value
-            raw_title = title_value
+        for title in text["title"].values():
+            raw_title = title
+            break
 
         categories = [text["category_id"]] if text["category_id"] else []
         return TextGroupPayload(
