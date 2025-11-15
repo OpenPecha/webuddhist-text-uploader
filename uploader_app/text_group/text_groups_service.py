@@ -45,30 +45,18 @@ class TextGroupsService:
             # Upload texts to webuddhist backend
             for text in grouped_text_by_type["text"]:
                 print("text version>>>>>>>>>>>>>>>>>>>>>>>>>",text)
-                collection_response = await get_collection_by_pecha_collection_id(
-                    text["id"]
-                )
-                if collection_response is None:
-                    continue
-                print("collection response version>>>>>>>>>>>>>>>>>>>>>>>>>",collection_response, text["id"])
+
                 text_payload = await self._filter_text_groups(
-                    text, self.version_group_id, type="version", id=collection_response["category_id"]
+                    text, self.version_group_id, type="version"
                 )
                 text_response = await post_text(text_payload)
                 self.text_ids.append(text_response["id"])
-                print("text response version>>>>>>>>>>>>>>>>>>>>>>>>>",text_response)
 
             for text in grouped_text_by_type["commentary"]:
-                collection_response = await get_collection_by_pecha_collection_id(
-                    text["id"]
-                )
-                if collection_response is None:
-                    continue
                 text_payload = await self._filter_text_groups(
                     text,
                     self.commentary_group_id,
-                    type="commentary",
-                    id=collection_response["category_id"],
+                    type="commentary"
                 )
                 text_response = await post_text(text_payload)
                 self.text_ids.append(text_response["id"])
@@ -80,7 +68,7 @@ class TextGroupsService:
         return await get_texts(type)
 
     async def _filter_text_groups(
-        self, text: dict[str, Any], group_id: str | None, type: str, id: str | None
+        self, text: dict[str, Any], group_id: str | None, type: str
     ) -> TextGroupPayload:
         # Fetch critical instances for this text so we can map ID and source.
         critical_instances = await get_critical_instances(text["id"])
@@ -104,7 +92,7 @@ class TextGroupsService:
                     title_value = first_value
             raw_title = title_value
 
-        categories = [id] if id else []
+        categories = [text["category_id"]] if text["category_id"] else []
         return TextGroupPayload(
             pecha_text_id=critical_instance["id"],
             title=raw_title,
@@ -113,7 +101,7 @@ class TextGroupsService:
             group_id=group_id,
             published_by="",
             type=type,
-            categories=categories,
+            categories=categories,  
             views=text.get("views", 0),
             source_link=critical_instance["source"],
             ranking=text.get("ranking"),
