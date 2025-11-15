@@ -1,5 +1,5 @@
 import requests
-from mapping_models import (
+from uploader_app.mappings.mapping_models import (
     MappingPayload,
     TextMapping,
     Mapping
@@ -9,16 +9,20 @@ def generate_mapping_payload(relations):
     response = MappingPayload(
         text_mapping = []
     )
+    
+    # relations is a dict with "manifestation_id" and "segments" keys
+    manifestation_id = relations.get("manifestation_id", "")
+    segments_list = relations.get("segments", [])
 
-    for relation in relations:
+    for relation in segments_list:
         mapping = TextMapping(
-            text_id = relations["manifestation_id"],
+            text_id = manifestation_id,
             segment_id = relation["segment_id"],
             mappings = []
         )
-        for segment_mapping in relation["mappings"]:
+        for segment_mapping in relation.get("mappings", []):
             segments = [
-                segment["segment_id"] for segment in segment_mapping["segments"]
+                segment["segment_id"] for segment in segment_mapping.get("segments", [])
             ]
             mapping.mappings.append(Mapping(
                 parent_text_id = segment_mapping["manifestation_id"],
@@ -28,6 +32,7 @@ def generate_mapping_payload(relations):
     return response
 
 def upload_mappings(relations):
+    print("relations >>>>>>>>>>>>>>>>>",relations)
     mapping_payload = generate_mapping_payload(relations)
     
     url = "https://webuddhist-dev-backend.onrender.com/api/v1/mappings"
