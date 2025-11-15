@@ -24,10 +24,10 @@ MANIFESTATION_LOG_PATH = Path("manifestation_status_log.csv")
 class SegmentService:
 
     async def upload_segments(self):
-        pecha_text_ids = await self.get_pecha_text_ids_from_csv()
+        text_pairs = await self.get_pecha_text_ids_from_csv()
         manifestation_data = []  # Store manifestation status and text id for each text
         
-        for pecha_text_id in pecha_text_ids:
+        for pecha_text_id, text_id in text_pairs:
             try:    
                 # Check if the text_id is already in the CSV
                 manifestation_response = await get_manifestation_by_text_id(pecha_text_id)
@@ -46,12 +46,15 @@ class SegmentService:
                 print(f"Unexpected error for text_id={pecha_text_id}: {e}")
                 continue
         self.save_manifestation_data_to_csv(manifestation_data)
-        for pecha_text_id in pecha_text_ids:
+        for pecha_text_id, text_id in text_pairs:
             relation_text = await self.get_relation_text_id_service(pecha_text_id)
+            print("relation_text >>>>>>>>>>>>>>>>> completed", relation_text)
             segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
-            print(">>>>>>>>>>>>>>>>>>>>>>",segments_ids, pecha_text_id)
+            print("segments_ids >>>>>>>>>>>>>>>>>",segments_ids)
             segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
-            create_segments_payload = self.create_segments_payload(segments_content)
+            print("segments_content >>>>>>>>>>>>>>>>>",segments_content)
+            create_segments_payload = await self.create_segments_payload(text_id, segments_content)
+            print("create_segments_payload >>>>>>>>>>>>>>>>>",create_segments_payload)
             break
 
 
@@ -66,6 +69,7 @@ class SegmentService:
                 "type": "source",
             })
         post_segments_response = await post_segments(payload)
+        print("data >>>>>>>>>>>>>>>>>",post_segments_response)
         return payload
     
     def generate_weBuddhist_mapping_payload(self, mapping):
@@ -106,13 +110,14 @@ class SegmentService:
         return manifestation_records
     
     async def _get_segments_content(self, segment_ids: List[str], pecha_text_id: str) -> List[dict[str, Any]]:
-        segments_content = []
+        # segments_content = []
+        # batch_size = 1000
+        # for i in range(0, len(segment_ids), batch_size):
+        #     batch = segment_ids[i:i + batch_size]
+        #     get_segment_content_response = await get_segment_content(batch, pecha_text_id)
+        #     segments_content.append(get_segment_content_response)
         get_segment_content_response = await get_segment_content(segment_ids, pecha_text_id)
         return get_segment_content_response
-        
-
-        # segments_content = await get_segment_content(segment_ids, pecha_text_id)
-        return segments_content
 
 
     async def get_segments_annotationby_pecha_text_id(
@@ -131,18 +136,19 @@ class SegmentService:
 
         return segmentation_ids
 
-    async def get_pecha_text_ids_from_csv(self) -> List[str]:
+    async def get_pecha_text_ids_from_csv(self) -> List[tuple[str, str]]:
 
         if not LOG_PATH.exists():
             return []
 
-        pecha_ids: list[str] = []
+        pecha_ids: list[tuple[str, str]] = []
         with LOG_PATH.open("r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                pecha_id = row["pecha_text_id"]
-                if pecha_id:
-                    pecha_ids.append(pecha_id)
+                pecha_text_id = row["pecha_text_id"]
+                text_id = row["text_id"]
+                if pecha_text_id and text_id:
+                    pecha_ids.append((pecha_text_id, text_id))
 
         return pecha_ids
 
