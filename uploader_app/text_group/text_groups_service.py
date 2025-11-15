@@ -6,6 +6,8 @@ from uploader_app.text_group.text_group_repository import (
     post_group,
     get_critical_instances,
     post_text,
+    get_related_texts,
+    get_text_instances
 )
 from uploader_app.collection.collection_repository import get_collection_by_pecha_collection_id
 from uploader_app.config import TextType
@@ -22,21 +24,37 @@ class TextGroupsService:
         self.commentary_group_id: str | None = None
         self.text_ids: list[str] = []
 
+
+    async def get_related_texts_service(self):
+        texts = await self.get_text_groups_service()
+        
+        # data = await get_related_texts("OHadQHolFlxoIfTgOIywX")
+        # print("data >>>>>>>>>>>>>>>>>",data)
+        for text in texts:
+            data = await get_text_instances(text["id"], type="critical")
+            instance_id = data[0]["id"]
+            get_related_texts_response = await get_related_texts(instance_id)
+            print("get_related_texts_response >>>>>>>>>>>>>>>>>",get_related_texts_response)
+            
+        #     data = await get_related_texts(text["id"])
+        #     print("data >>>>>>>>>>>>>>>>>",data)
+
     async def upload_text_groups(self) -> dict[str, list[dict[str, Any]]]:
         texts = await self.get_text_groups_service()
         for text in texts:
 
             # Fetch all groups for the selected text.
             text_groups = await get_text_groups(text["id"])
+            print("text_groups >>>>>>>>>>>>>>>>>",text_groups)
 
             # Group them by type for downstream use.
             # Remove any group with type 'translation_source' from text_groups
-            filtered_text_groups = [
-                group
-                for group in text_groups["texts"]
-                if group.get("type") != TextType.TRANSLATION_SOURCE.value
-            ]
-            grouped_text_by_type = self.group_texts_by_type({"texts": filtered_text_groups})
+            # filtered_text_groups = [
+            #     group
+            #     for group in text_groups["texts"]
+            #     if group.get("type") != TextType.TRANSLATION_SOURCE.value
+            # ]
+            grouped_text_by_type = self.group_texts_by_type({"texts": text_groups["texts"]})
 
             # Upload groups to webuddhist backend
             for key in grouped_text_by_type.keys():
@@ -174,10 +192,10 @@ class TextGroupsService:
         commentaries: list[dict[str, Any]] = []
 
         for item in texts:
-            item_type = item.get("type")
+            item_type = item["type"]
 
             # Only keep root and translation in versions.
-            if item_type in {TextType.TRANSLATION.value, TextType.ROOT.value}:
+            if item_type in {TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value}:
                 versions.append(item)
             elif item_type == TextType.COMMENTARY.value:
                 commentaries.append(item)

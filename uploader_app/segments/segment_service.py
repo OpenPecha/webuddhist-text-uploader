@@ -15,6 +15,8 @@ from uploader_app.segments.segment_respository import (
     get_relation_text_id,
     post_segments
 )
+from uploader_app.mappings.mapping_service import upload_mappings
+
 from uploader_app.config import TEXT_UPLOAD_LOG_FILE
 from uploader_app.segments.segment_model import ManifestationModel
 
@@ -46,16 +48,19 @@ class SegmentService:
                 print(f"Unexpected error for text_id={pecha_text_id}: {e}")
                 continue
         self.save_manifestation_data_to_csv(manifestation_data)
+
         for pecha_text_id, text_id in text_pairs:
             relation_text = await self.get_relation_text_id_service(pecha_text_id)
-            print("relation_text >>>>>>>>>>>>>>>>> completed", relation_text)
+            print("relation_text >>>>>>>>>>>>>>>>> completed")
             segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
-            print("segments_ids >>>>>>>>>>>>>>>>>",segments_ids)
+            print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
             segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
-            print("segments_content >>>>>>>>>>>>>>>>>",segments_content)
+            print("segments_content >>>>>>>>>>>>>>>>> completed")
             create_segments_payload = await self.create_segments_payload(text_id, segments_content)
-            print("create_segments_payload >>>>>>>>>>>>>>>>>",create_segments_payload)
-            break
+            print("create_segments>>>>>>>>>>>>>>>>> completed")
+            upload_mappings_response = upload_mappings(relation_text)
+            print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
+
 
 
     async def create_segments_payload(self, text_id: str, segments_content: List[dict[str, Any]]) -> List[dict[str, Any]]:
@@ -69,7 +74,6 @@ class SegmentService:
                 "type": "source",
             })
         post_segments_response = await post_segments(payload)
-        print("data >>>>>>>>>>>>>>>>>",post_segments_response)
         return payload
     
     def generate_weBuddhist_mapping_payload(self, mapping):

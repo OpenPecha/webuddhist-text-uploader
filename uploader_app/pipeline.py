@@ -10,17 +10,17 @@ async def pipeline():
     # collection = CollectionService()
     # await collection.upload_collections()
 
-    # print("collection uploaded successfully")
+    print("collection uploaded successfully")
 
     # # text group upload
     text_group = TextGroupsService()
-    await text_group.upload_text_groups()
+    await text_group.get_related_texts_service()
 
     print("text group uploaded successfully")
 
     # #segment upload
-    segment = SegmentService()
-    await segment.upload_segments()
+    # segment = SegmentService()
+    # await segment.upload_segments()
 
 
 if __name__ == "__main__":

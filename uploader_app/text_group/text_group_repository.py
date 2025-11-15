@@ -20,6 +20,21 @@ async def get_texts(type: str | None = None) -> list[dict[str, Any]]:
     return response.json()
 
 
+async def get_related_texts(text_id: str) -> list[dict[str, Any]]:
+    related_texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/instances/{text_id}/related"
+    response = await asyncio.to_thread(requests.get, related_texts_url)
+    response.raise_for_status()
+    return response.json()
+
+async def get_text_instances(text_id: str, type: str) -> list[dict[str, Any]]:
+    instances_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/instances"
+    params = {
+        "type": type,
+    }
+    response = await asyncio.to_thread(requests.get, instances_url, params=params)
+    response.raise_for_status()
+    return response.json()
+
 async def get_text_groups(text_id: str) -> list[dict[str, Any]]:
     groups_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/group"
 

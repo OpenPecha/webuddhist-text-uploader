@@ -28,12 +28,3 @@ class SQSURL(Enum):
 class DestinationURL(Enum):
     LOCAL = "http://127.0.0.1:8000/api/v1"
 
-class OpenPechaAPIURL(Enum):
-    DEVELOPMENT = "https://api-l25bgmwqoa-uc.a.run.app/"
-
-class SQSURL(Enum):
-    DEVELOPMENT = "https://sqs-uploader-service.onrender.com/"
-
-
-class DestinationURL(Enum):
-    LOCAL = "http://127.0.0.1:8000/api/v1"
