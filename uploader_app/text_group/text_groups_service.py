@@ -10,6 +10,10 @@ from uploader_app.text_group.text_group_repository import (
 from uploader_app.collection.collection_repository import get_collection_by_pecha_collection_id
 from uploader_app.config import TextType
 from uploader_app.text_group.text_group_model import TextGroupPayload
+from uploader_app.text_group.text_upload_log import (
+    has_been_uploaded,
+    log_uploaded_text,
+)
 
 
 class TextGroupsService:
@@ -44,13 +48,30 @@ class TextGroupsService:
 
             # Upload texts to webuddhist backend
             for text in grouped_text_by_type["text"]:
-                print("text version>>>>>>>>>>>>>>>>>>>>>>>>>",text)
-
                 text_payload = await self._filter_text_groups(
                     text, self.version_group_id, type="version"
                 )
+                pecha_id = text_payload.pecha_text_id
+
+                # Skip upload if this text was already uploaded (checked via CSV log).
+                if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
+                    print(
+                        f"Skipping already uploaded version text: "
+                        f"{pecha_id} ({text_payload.title})"
+                    )
+                    continue
+
                 text_response = await post_text(text_payload)
                 self.text_ids.append(text_response["id"])
+
+                if pecha_id:
+                    log_uploaded_text(
+                        pecha_text_id=pecha_id,
+                        text_type=text_payload.type,
+                        title=text_payload.title,
+                        language=text_payload.language,
+                        source_link=text_payload.source_link,
+                    )
 
             for text in grouped_text_by_type["commentary"]:
                 text_payload = await self._filter_text_groups(
@@ -58,9 +79,26 @@ class TextGroupsService:
                     self.commentary_group_id,
                     type="commentary"
                 )
+                pecha_id = text_payload.pecha_text_id
+
+                if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
+                    print(
+                        f"Skipping already uploaded commentary text: "
+                        f"{pecha_id} ({text_payload.title})"
+                    )
+                    continue
+
                 text_response = await post_text(text_payload)
                 self.text_ids.append(text_response["id"])
-                print("text response commentary>>>>>>>>>>>>>>>>>>>>>>>>>",text_response)
+
+                if pecha_id:
+                    log_uploaded_text(
+                        pecha_text_id=pecha_id,
+                        text_type=text_payload.type,
+                        title=text_payload.title,
+                        language=text_payload.language,
+                        source_link=text_payload.source_link,
+                    )
 
         return grouped_text_by_type
 

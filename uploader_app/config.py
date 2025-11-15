@@ -8,6 +8,10 @@ APPLICATION = "webuddhist"
 
 COLLECTION_LANGUAGES = ["bo", "en"]
 
+# CSV file used to log which texts have already been uploaded.
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+TEXT_UPLOAD_LOG_FILE = os.path.join(BASE_DIR, "text_upload_log.csv")
+
 class TextType(Enum):
     COMMENTARY = "commentary"
     ROOT = "root"
