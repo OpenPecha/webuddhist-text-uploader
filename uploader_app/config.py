@@ -22,7 +22,7 @@ class OpenPechaAPIURL(Enum):
     DEVELOPMENT = "https://api-l25bgmwqoa-uc.a.run.app"
 
 class SQSURL(Enum):
-    DEVELOPMENT = "https://celery-microservice.onrender.com/"
+    DEVELOPMENT = "https://sqs-uploader-service.onrender.com"
 
 
 class DestinationURL(Enum):

@@ -50,55 +50,43 @@ async def get_segment_content(
         f"{OpenPechaAPIURL.DEVELOPMENT.value}"
         f"/v2/instances/{pecha_text_id}/segment-content"
     )
-
-    # The API accepts multiple segment IDs either as repeated query params
-    # or as a single comma-separated string.
-    # To maximize compatibility with the backend implementation, we
-    # send them as a single comma-separated string:
-    #   ?segment_id=SEG001,SEG002,SEG003
-    params = {
-        "segment_id": ",".join(segment_id),
+    payload = {
+        "segment_ids": segment_id
     }
 
-    response = await asyncio.to_thread(
-        requests.get,
-        url,
-        params=params,
-    )
-    response.raise_for_status()
-
-    return response.json()
+    try:
+        response = await asyncio.to_thread(
+            requests.post,
+            url,
+            json=payload,
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error in get_segment_content: {e}")
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.text}")
+        raise
+    except requests.exceptions.RequestException as e:
+        print(f"Request Error in get_segment_content: {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected Error in get_segment_content: {e}")
+        raise
 
 
 async def post_segments(
-    text_id: str,
-    segments: list[dict[str, Any]],
+    segments_payload: dict[str, Any],
 ) -> dict[str, Any]:
-    """
-    Create segments in the webuddhist backend.
 
-    This wraps a `POST /segments` call to the destination API and sends a
-    JSON body shaped as:
-
-        {
-          "text_id": "string",
-          "segments": [
-            {
-              "content": "string",
-              "type": "source",
-              "mapping": []
-            }
-          ]
-        }
-    """
     url = f"{DestinationURL.LOCAL.value}/segments"
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
     }
     payload: dict[str, Any] = {
-        "text_id": text_id,
-        "segments": segments,
+        "text_id": segments_payload["text_id"],
+        "segments": segments_payload["segments"],
     }
 
     response = await asyncio.to_thread(
@@ -123,6 +111,15 @@ async def get_manifestation_by_text_id(text_id: str) -> dict[str, Any]:
     url = f"{SQSURL.DEVELOPMENT.value}/relation/{text_id}"
 
     response = await asyncio.to_thread(requests.post, url)
+    response.raise_for_status()
+    return response.json()
+
+
+
+async def get_relation_text_id(text_id: str) -> dict[str, Any]:
+    url = f"{SQSURL.DEVELOPMENT.value}/relation/{text_id}/all-relations"
+    
+    response = await asyncio.to_thread(requests.get, url)
     response.raise_for_status()
     return response.json()
 
