@@ -55,18 +55,16 @@ class TextGroupsService:
 
                 # Skip upload if this text was already uploaded (checked via CSV log).
                 if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
-                    print(
-                        f"Skipping already uploaded version text: "
-                        f"{pecha_id} ({text_payload.title})"
+                    print(f"Skipping already uploaded version text: {pecha_id} ({text_payload.title})"
                     )
                     continue
 
                 text_response = await post_text(text_payload)
-                self.text_ids.append(text_response["id"])
 
                 if pecha_id:
                     log_uploaded_text(
                         pecha_text_id=pecha_id,
+                        text_id=text_response["id"],
                         text_type=text_payload.type,
                         title=text_payload.title,
                         language=text_payload.language,
@@ -82,18 +80,15 @@ class TextGroupsService:
                 pecha_id = text_payload.pecha_text_id
 
                 if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
-                    print(
-                        f"Skipping already uploaded commentary text: "
-                        f"{pecha_id} ({text_payload.title})"
-                    )
+                    print(f"Skipping already uploaded commentary text: {pecha_id} ({text_payload.title})")
                     continue
 
                 text_response = await post_text(text_payload)
-                self.text_ids.append(text_response["id"])
-
+        
                 if pecha_id:
                     log_uploaded_text(
                         pecha_text_id=pecha_id,
+                        text_id=text_response["id"],
                         text_type=text_payload.type,
                         title=text_payload.title,
                         language=text_payload.language,
