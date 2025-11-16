@@ -32,6 +32,10 @@ class TextGroupsService:
     async def upload_tests_new_service(self):
 
         texts = await self.get_texts_service()
+        text_types = [text["type"] for text in texts]
+        print("text_types >>>>>>>>>>>>>>>>>",text_types)
+
+        
 
         for text in texts:
             related_text_ids = []
@@ -50,7 +54,8 @@ class TextGroupsService:
             else:
                 commentary_text_ids.append(text["id"])
 
-            await self.get_text_meta_data_service(related_text_ids, "translation")
+            # await self.get_text_meta_data_service(related_text_ids, "translation")
+            await self.get_text_meta_data_service(commentary_text_ids, "commentary")
 
 
     async def get_text_meta_data_service(self, text_ids: List[str], type: str):
@@ -60,18 +65,27 @@ class TextGroupsService:
             for text_id in text_ids:
                 text_metadata = await get_text_metadata(text_id)
                 await self.create_text_db(text_metadata, 'text', group_id)
+        if type == "commentary":
+            group_response = await post_group('commentary')
+            group_id = group_response["id"]
+            for text_id in text_ids:
+                text_metadata = await get_text_metadata(text_id)
+                await self.create_text_db(text_metadata, 'commentary', group_id)
 
 
     async def create_text_db(self, text_metadata: dict[str, Any], type: str, group_id: str):
         if type == "text":
             text_payload = await self._filter_text_groups(text_metadata, group_id, type="version")
+            if text_payload is None:
+                return
             pecha_id = text_payload.pecha_text_id
 
-
+            print("pecha_id >>>>>>>>>>>>>>>>>",pecha_id, has_been_uploaded(pecha_id, text_payload.type))
             # Skip upload if this text was already uploaded (checked via CSV log).
             if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
-                print(f"Skipping already uploaded version text: {pecha_id} ({text_payload.title})"
+                print(f"Skipping already uploaded version text: {pecha_id} >>> ({text_payload.title})"
                 )
+                return
             text_response = await post_text(text_payload)
             if pecha_id:
                 log_uploaded_text(
@@ -84,9 +98,11 @@ class TextGroupsService:
                 )
         else:
             text_payload = await self._filter_text_groups(text_metadata, group_id, type="commentary")
+            if text_payload is None:
+                return
             pecha_id = text_payload.pecha_text_id
             if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
-                print(f"Skipping already uploaded commentary text: {pecha_id} ({text_payload.title})")
+                print(f"Skipping already uploaded commentary text: {pecha_id} >>> ({text_payload.title})")
                 return
             text_response = await post_text(text_payload)
             if pecha_id:
@@ -183,9 +199,12 @@ class TextGroupsService:
         self, text: dict[str, Any], group_id: str | None, type: str
     ) -> TextGroupPayload:
         # Fetch critical instances for this text so we can map ID and source.
-        critical_instances = await get_critical_instances(text["id"])
+        critical_instances_list = await get_critical_instances(text["id"])
 
-        critical_instance = critical_instances[0]
+        if len(critical_instances_list) > 0:
+            critical_instance = critical_instances_list[0]
+        else:
+            return None
 
         raw_title = ''
 
