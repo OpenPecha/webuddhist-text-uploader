@@ -14,7 +14,7 @@ async def pipeline():
 
     # # text group upload
     text_group = TextGroupsService()
-    await text_group.get_related_texts_service()
+    await text_group.upload_tests_new_service()
 
     print("text group uploaded successfully")
 

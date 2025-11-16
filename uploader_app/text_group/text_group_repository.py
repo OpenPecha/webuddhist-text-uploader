@@ -114,3 +114,17 @@ async def post_text(text_payload: TextGroupPayload) -> dict[str, Any]:
         response.raise_for_status()
 
     return response.json()
+
+
+async def get_text_related_by_work(text_id: str) -> list[dict[str, Any]]:
+    related_texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}/related-by-work"
+    response = await asyncio.to_thread(requests.get, related_texts_url)
+    response.raise_for_status()
+    data = response.json()
+    return data
+
+async def get_text_metadata(text_id: str) -> list[dict[str, Any]]:
+    text_metadata_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts/{text_id}"
+    response = await asyncio.to_thread(requests.get, text_metadata_url)
+    response.raise_for_status()
+    return response.json()

@@ -1,4 +1,6 @@
-from typing import Any
+from typing import Any, List
+
+from uploader_app.config import VERSION_TEXT_TYPE
 
 from uploader_app.text_group.text_group_repository import (
     get_texts,
@@ -7,7 +9,9 @@ from uploader_app.text_group.text_group_repository import (
     get_critical_instances,
     post_text,
     get_related_texts,
-    get_text_instances
+    get_text_instances,
+    get_text_related_by_work,
+    get_text_metadata
 )
 from uploader_app.collection.collection_repository import get_collection_by_pecha_collection_id
 from uploader_app.config import TextType
@@ -25,27 +29,103 @@ class TextGroupsService:
         self.text_ids: list[str] = []
 
 
-    async def get_related_texts_service(self):
-        texts = await self.get_text_groups_service()
-        
-        # data = await get_related_texts("OHadQHolFlxoIfTgOIywX")
-        # print("data >>>>>>>>>>>>>>>>>",data)
+    async def upload_tests_new_service(self):
+
+        texts = await self.get_texts_service()
+
         for text in texts:
-            data = await get_text_instances(text["id"], type="critical")
-            instance_id = data[0]["id"]
-            get_related_texts_response = await get_related_texts(instance_id)
-            print("get_related_texts_response >>>>>>>>>>>>>>>>>",get_related_texts_response)
-            
-        #     data = await get_related_texts(text["id"])
-        #     print("data >>>>>>>>>>>>>>>>>",data)
+            related_text_ids = []
+            commentary_text_ids = []
+            text_related_by_work_response = await get_text_related_by_work(text["id"])
+            for key in text_related_by_work_response.keys():
+                if text_related_by_work_response[key]["relation"] in VERSION_TEXT_TYPE:
+                    expression_ids = text_related_by_work_response[key]["expression_ids"]
+                    related_text_ids = expression_ids
+                else:
+                    commentary_ids = text_related_by_work_response[key]["expression_ids"]
+                    commentary_text_ids = commentary_ids
+
+            if text["type"] in VERSION_TEXT_TYPE:
+                related_text_ids.append(text["id"]) 
+            else:
+                commentary_text_ids.append(text["id"])
+
+            await self.get_text_meta_data_service(related_text_ids, "translation")
+
+
+    async def get_text_meta_data_service(self, text_ids: List[str], type: str):
+        if type == "translation":
+            group_response = await post_group('text')
+            group_id = group_response["id"]
+            for text_id in text_ids:
+                text_metadata = await get_text_metadata(text_id)
+                await self.create_text_db(text_metadata, 'text', group_id)
+
+
+    async def create_text_db(self, text_metadata: dict[str, Any], type: str, group_id: str):
+        if type == "text":
+            text_payload = await self._filter_text_groups(text_metadata, group_id, type="version")
+            pecha_id = text_payload.pecha_text_id
+
+
+            # Skip upload if this text was already uploaded (checked via CSV log).
+            if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
+                print(f"Skipping already uploaded version text: {pecha_id} ({text_payload.title})"
+                )
+            text_response = await post_text(text_payload)
+            if pecha_id:
+                log_uploaded_text(
+                    pecha_text_id=pecha_id,
+                    text_id=text_response["id"],
+                    text_type=text_payload.type,
+                    title=text_payload.title,
+                    language=text_payload.language,
+                    source_link=text_payload.source_link,
+                )
+        else:
+            text_payload = await self._filter_text_groups(text_metadata, group_id, type="commentary")
+            pecha_id = text_payload.pecha_text_id
+            if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
+                print(f"Skipping already uploaded commentary text: {pecha_id} ({text_payload.title})")
+                return
+            text_response = await post_text(text_payload)
+            if pecha_id:
+                log_uploaded_text(
+                    pecha_text_id=pecha_id,
+                    text_id=text_response["id"],
+                    text_type=text_payload.type,
+                    title=text_payload.title,
+                    language=text_payload.language,
+                    source_link=text_payload.source_link,
+                )
+
+
+
+
+
+
+    def group_instances_by_type(self, instances: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+        versions: list[dict[str, Any]] = []
+        commentaries: list[dict[str, Any]] = []
+        for instance in instances:
+            if instance["relationship"] == "translation" or instance["relationship"] == "translation_source":
+                versions.append(instance)
+            elif instance["relationship"] == "commentary":
+                commentaries.append(instance)
+        return {"text": versions, "commentary": commentaries}
 
     async def upload_text_groups(self) -> dict[str, list[dict[str, Any]]]:
         texts = await self.get_text_groups_service()
         for text in texts:
+            data = await get_text_instances(text["id"], type="critical")
+            instance_id = data[0]["id"]
+            get_related_texts_response = await get_related_texts(instance_id)
 
+            grouped_text_by_type = self.group_instances_by_type(get_related_texts_response)
+            print("get_related_texts_response >>>>>>>>>>>>>>>>>",grouped_text_by_type)
             # Fetch all groups for the selected text.
-            text_groups = await get_text_groups(text["id"])
-            print("text_groups >>>>>>>>>>>>>>>>>",text_groups)
+            # text_groups = await get_text_groups(text["id"])
+            # print("text_groups >>>>>>>>>>>>>>>>>",text_groups)
 
             # Group them by type for downstream use.
             # Remove any group with type 'translation_source' from text_groups
@@ -54,7 +134,6 @@ class TextGroupsService:
             #     for group in text_groups["texts"]
             #     if group.get("type") != TextType.TRANSLATION_SOURCE.value
             # ]
-            grouped_text_by_type = self.group_texts_by_type({"texts": text_groups["texts"]})
 
             # Upload groups to webuddhist backend
             for key in grouped_text_by_type.keys():
@@ -69,25 +148,7 @@ class TextGroupsService:
                 text_payload = await self._filter_text_groups(
                     text, self.version_group_id, type="version"
                 )
-                pecha_id = text_payload.pecha_text_id
-
-                # Skip upload if this text was already uploaded (checked via CSV log).
-                if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
-                    print(f"Skipping already uploaded version text: {pecha_id} ({text_payload.title})"
-                    )
-                    continue
-
-                text_response = await post_text(text_payload)
-
-                if pecha_id:
-                    log_uploaded_text(
-                        pecha_text_id=pecha_id,
-                        text_id=text_response["id"],
-                        text_type=text_payload.type,
-                        title=text_payload.title,
-                        language=text_payload.language,
-                        source_link=text_payload.source_link,
-                    )
+                
 
             for text in grouped_text_by_type["commentary"]:
                 text_payload = await self._filter_text_groups(
@@ -115,7 +176,7 @@ class TextGroupsService:
 
         return grouped_text_by_type
 
-    async def get_text_groups_service(self, type: str | None = None):
+    async def get_texts_service(self, type: str | None = None):
         return await get_texts(type)
 
     async def _filter_text_groups(
@@ -204,3 +265,7 @@ class TextGroupsService:
             "text": versions,
             "commentary": commentaries,
         }
+
+
+    async def get_text_related_by_work_service(text_id: str):
+        pass
