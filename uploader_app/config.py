@@ -17,9 +17,10 @@ class TextType(Enum):
     ROOT = "root"
     TRANSLATION = "translation"
     TRANSLATION_SOURCE = "translation_source"
+    NONE = None
 
 
-VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value]
+VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value, TextType.NONE.value]
 
 
 class OpenPechaAPIURL(Enum):
