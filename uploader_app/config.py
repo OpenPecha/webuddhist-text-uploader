@@ -18,6 +18,10 @@ class TextType(Enum):
     TRANSLATION = "translation"
     TRANSLATION_SOURCE = "translation_source"
 
+
+VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value]
+
+
 class OpenPechaAPIURL(Enum):
     DEVELOPMENT = "https://api-l25bgmwqoa-uc.a.run.app"
 
