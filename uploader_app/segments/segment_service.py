@@ -51,6 +51,7 @@ class SegmentService:
 
         for pecha_text_id, text_id in text_pairs:
             relation_text = await self.get_relation_text_id_service(pecha_text_id)
+            print("relation_text >>>>>>>>>>>>>>>>>",relation_text)
             print("relation_text >>>>>>>>>>>>>>>>> completed")
             segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
             print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
@@ -58,7 +59,7 @@ class SegmentService:
             print("segments_content >>>>>>>>>>>>>>>>> completed")
             create_segments_payload = await self.create_segments_payload(text_id, segments_content)
             print("create_segments>>>>>>>>>>>>>>>>> completed")
-            upload_mappings_response = upload_mappings(relation_text)
+            # upload_mappings_response = upload_mappings(relation_text)
             print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
 
 

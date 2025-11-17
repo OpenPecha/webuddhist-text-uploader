@@ -98,7 +98,7 @@ async def post_segments(
 
     if not response.ok:
         print(
-            "POST /segments failed "
+            "POST /segments failed"
             f"(text_id={segments_payload['text_id']}) status={response.status_code} "
             f"body={response.text}"
         )
