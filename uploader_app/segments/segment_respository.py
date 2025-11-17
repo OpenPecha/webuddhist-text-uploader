@@ -24,6 +24,11 @@ async def get_segments_annotation(pecha_text_id: str) -> list[dict[str, Any]]:
     # The API is expected to return JSON, usually a list of instances/segments.
     return response.json()
 
+async def get_segments_id_by_annotation_id(annotation_id: str) -> list[dict[str, Any]]:
+    url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/annotations/{annotation_id}"
+    response = await asyncio.to_thread(requests.get, url)
+    response.raise_for_status()
+    return response.json()
 
 async def get_segments_by_id(annotation_id: str) -> dict[str, Any]:
     """
