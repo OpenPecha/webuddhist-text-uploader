@@ -62,7 +62,8 @@ class CollectionService:
                     # Look up parent's destination ID from CSV
                     if parent_pecha_id:
                         parent_id_to_use = get_parent_id_by_pecha_collection_id(parent_pecha_id)
-
+            # if payload.get("slug") is None:
+                # continue
             collection_model = CollectionPayload(
                 pecha_collection_id=payload.get("pecha_collection_id"),
                 slug=payload.get("slug"),
@@ -71,7 +72,7 @@ class CollectionService:
                 # Use the resolved parent_id (from parameter or CSV lookup)
                 parent_id=parent_id_to_use,
             )
-
+            
             # Upload to webuddhist backend. We send the full multilingual
             # payload body, and use "en" as the request language context.
             response_data = await post_collections("en", collection_model)

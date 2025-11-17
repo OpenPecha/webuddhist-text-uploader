@@ -4,48 +4,30 @@ from uploader_app.mappings.mapping_models import (
     TextMapping,
     Mapping
 )
+from uploader_app.segments.segment_respository import get_manifestation_by_text_id
 
-def generate_mapping_payload(relations):
-    response = MappingPayload(
-        text_mapping = []
-    )
-    
-    # relations is a dict with "manifestation_id" and "segments" keys
-    manifestation_id = relations.get("manifestation_id", "")
-    segments_list = relations.get("segments", [])
+class MappingService:
+    def __init__(self):
+        # Import here to avoid circular import
+        from uploader_app.segments.segment_service import SegmentService
+        self.segment_service = SegmentService()
 
-    for relation in segments_list:
-        mapping = TextMapping(
-            text_id = manifestation_id,
-            segment_id = relation["segment_id"],
-            mappings = []
-        )
-        for segment_mapping in relation.get("mappings", []):
-            segments = [
-                segment["segment_id"] for segment in segment_mapping.get("segments", [])
-            ]
-            mapping.mappings.append(Mapping(
-                parent_text_id = segment_mapping["manifestation_id"],
-                segments = segments
-            ))
-        response.text_mapping.append(mapping)
-    return response
+    async def trigger_mapping_service(self):
+        text_pairs = await self.segment_service.get_pecha_text_ids_from_csv()
+        for pecha_text_id, text_id in text_pairs:
+            response = await get_manifestation_by_text_id(pecha_text_id)
+            print("response >>>>>>>>>>>>>>>>>",response)
+    
 
-def upload_mappings(relations):
-    print("relations >>>>>>>>>>>>>>>>>",relations)
-    mapping_payload = generate_mapping_payload(relations)
-    
-    url = "https://webuddhist-dev-backend.onrender.com/api/v1/mappings"
-    headers = {
-        "accept": "application/json",
-        "Content-Type": "application/json"
-    }
-    
-    # Convert the payload to dict for JSON serialization
-    response = requests.post(
-        url,
-        json=mapping_payload.dict() if hasattr(mapping_payload, 'dict') else mapping_payload,
-        headers=headers
-    )
-    
-    return response
+
+
+
+
+
+
+
+
+
+
+
+

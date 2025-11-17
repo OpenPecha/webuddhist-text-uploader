@@ -42,24 +42,23 @@ class TextGroupsService:
         
 
         for text in texts:
-            related_text_ids = []
-            commentary_text_ids = []
-            text_related_by_work_response = await get_text_related_by_work(text["id"])
-            for key in text_related_by_work_response.keys():
-                if text_related_by_work_response[key]["relation"] in VERSION_TEXT_TYPE:
-                    expression_ids = text_related_by_work_response[key]["expression_ids"]
-                    related_text_ids = expression_ids
-                else:
-                    commentary_ids = text_related_by_work_response[key]["expression_ids"]
-                    commentary_text_ids = commentary_ids
-
-            if text["type"] in VERSION_TEXT_TYPE:
-                related_text_ids.append(text["id"]) 
+            pass
+        related_text_ids = []
+        commentary_text_ids = []
+        text_related_by_work_response = await get_text_related_by_work("OSAXnBbZum76NfGBqvbjf")
+        for key in text_related_by_work_response.keys():
+            if text_related_by_work_response[key]["relation"] in VERSION_TEXT_TYPE:
+                expression_ids = text_related_by_work_response[key]["expression_ids"]
+                related_text_ids = expression_ids
             else:
-                commentary_text_ids.append(text["id"])
-
-            await self.get_text_meta_data_service(related_text_ids, "translation")
-            await self.get_text_meta_data_service(commentary_text_ids, "commentary")
+                commentary_ids = text_related_by_work_response[key]["expression_ids"]
+                commentary_text_ids = commentary_ids
+        if text["type"] in VERSION_TEXT_TYPE:
+            related_text_ids.append("OSAXnBbZum76NfGBqvbjf") 
+        else:
+            commentary_text_ids.append("OSAXnBbZum76NfGBqvbjf")
+        await self.get_text_meta_data_service(related_text_ids, "translation")
+        await self.get_text_meta_data_service(commentary_text_ids, "commentary")
 
 
     async def get_text_meta_data_service(self, text_ids: List[str], type: str):
