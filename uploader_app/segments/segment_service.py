@@ -13,7 +13,8 @@ from uploader_app.segments.segment_respository import (
     get_segment_content,
     get_manifestation_by_text_id,
     get_relation_text_id,
-    post_segments
+    post_segments,
+    get_segments_id_by_annotation_id
 )
 from uploader_app.mappings.mapping_service import upload_mappings
 
@@ -29,53 +30,62 @@ class SegmentService:
         text_pairs = await self.get_pecha_text_ids_from_csv()
         manifestation_data = []  # Store manifestation status and text id for each text
         
-        for pecha_text_id, text_id in text_pairs:
-            try:    
-                # Check if the text_id is already in the CSV
-                manifestation_response = await get_manifestation_by_text_id(pecha_text_id)
-                manifestation_model = ManifestationModel(**manifestation_response)
-                # Store manifestation status and text id
-                manifestation_data.append({
-                    "text_id": pecha_text_id,
-                    "status": manifestation_model.status,
-                    "job_id": manifestation_model.job_id,
-                    "message": manifestation_model.message
-                })
-            except requests.exceptions.HTTPError as e:
-                print(f"HTTP error for text_id={pecha_text_id}: {e}")
-                continue
-            except Exception as e:
-                print(f"Unexpected error for text_id={pecha_text_id}: {e}")
-                continue
-        self.save_manifestation_data_to_csv(manifestation_data)
-
-        for pecha_text_id, text_id in text_pairs:
-            relation_text = await self.get_relation_text_id_service(pecha_text_id)
-            print("relation_text >>>>>>>>>>>>>>>>>",relation_text)
-            print("relation_text >>>>>>>>>>>>>>>>> completed")
-            segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
-            print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
-            segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
-            print("segments_content >>>>>>>>>>>>>>>>> completed")
-            create_segments_payload = await self.create_segments_payload(text_id, segments_content)
-            print("create_segments>>>>>>>>>>>>>>>>> completed")
-            # upload_mappings_response = upload_mappings(relation_text)
-            print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
+        # for pecha_text_id, text_id in text_pairs:
+        #     try:    
+        #         # Check if the text_id is already in the CSV
+        #         manifestation_response = await get_manifestation_by_text_id(pecha_text_id)
+        #         manifestation_model = ManifestationModel(**manifestation_response)
+        #         # Store manifestation status and text id
+        #         manifestation_data.append({
+        #             "text_id": pecha_text_id,
+        #             "status": manifestation_model.status,
+        #             "job_id": manifestation_model.job_id,
+        #             "message": manifestation_model.message
+        #         })
+        #     except requests.exceptions.HTTPError as e:
+        #         print(f"HTTP error for text_id={pecha_text_id}: {e}")
+        #         continue
+        #     except Exception as e:
+        #         print(f"Unexpected error for text_id={pecha_text_id}: {e}")
+        #         continue
+        # self.save_manifestation_data_to_csv(manifestation_data)
+        try:
+            for pecha_text_id, text_id in text_pairs:
+                instance = await self.get_segments_annotation_by_pecha_text_id(pecha_text_id)
+                annotation_ids = self.get_annotation_ids(instance)
+                annotation_sengments = await get_segments_id_by_annotation_id(annotation_ids[0])
+                segments_ids = [segment["id"] for segment in annotation_sengments["data"]]
+                print("annotation_ids >>>>>>>>>>>>>>>>>",segments_ids)
+                # segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
+                # print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
+                segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
+                await self.create_segments_payload(text_id, segments_content)
+                # print("create_segments>>>>>>>>>>>>>>>>> completed")
+                # # upload_mappings_response = upload_mappings(relation_text)
+                # print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
+        except Exception as e:
+            print("Error in upload_segments >>>>>>>>>>>>>>>>>",e)
+            raise e
 
 
 
     async def create_segments_payload(self, text_id: str, segments_content: List[dict[str, Any]]) -> List[dict[str, Any]]:
-        payload = {
-            "text_id": text_id,
-            "segments": []
-        }
+
+        payload = {}
         for segment in segments_content:
-            payload["segments"].append({
-                "content": segment["content"],
-                "type": "source",
-            })
-        post_segments_response = await post_segments(payload)
-        return payload
+            payload = {
+                "pecha_segment_id": segment["segment_id"],
+                "text_id": text_id,
+                "segments": [
+                    {
+                        "content": segment["content"],
+                        "type": "source",
+                    }
+                ]
+            }
+            post_segments_response = await post_segments(payload)
+            print("post_segments_response >>>>>>>>>>>>>>>>>",post_segments_response)
+
     
     def generate_weBuddhist_mapping_payload(self, mapping):
         pass
@@ -125,7 +135,7 @@ class SegmentService:
         return get_segment_content_response
 
 
-    async def get_segments_annotationby_pecha_text_id(
+    async def get_segments_annotation_by_pecha_text_id(
         self, pecha_text_id: str
     ) -> dict[str, Any]:
         return await get_segments_annotation(pecha_text_id)
