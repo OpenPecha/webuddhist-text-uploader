@@ -16,7 +16,6 @@ from uploader_app.segments.segment_respository import (
     post_segments,
     get_segments_id_by_annotation_id
 )
-from uploader_app.mappings.mapping_service import upload_mappings
 
 from uploader_app.config import TEXT_UPLOAD_LOG_FILE
 from uploader_app.segments.segment_model import ManifestationModel
@@ -74,7 +73,7 @@ class SegmentService:
         payload = {}
         for segment in segments_content:
             payload = {
-                "pecha_segment_id": segment[""],
+                "pecha_segment_id": segment["segment_id"],
                 "text_id": text_id,
                 "segments": [
                     {
