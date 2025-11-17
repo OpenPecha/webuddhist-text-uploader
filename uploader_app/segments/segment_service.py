@@ -74,7 +74,7 @@ class SegmentService:
         payload = {}
         for segment in segments_content:
             payload = {
-                "pecha_segment_id": segment["segment_id"],
+                "pecha_segment_id": segment[""],
                 "text_id": text_id,
                 "segments": [
                     {
