@@ -1,4 +1,5 @@
 from typing import Any, List
+from bson import ObjectId
 
 from uploader_app.config import VERSION_TEXT_TYPE
 
@@ -19,6 +20,9 @@ from uploader_app.text_group.text_group_model import TextGroupPayload
 from uploader_app.text_group.text_upload_log import (
     has_been_uploaded,
     log_uploaded_text,
+)
+from uploader_app.collection.collection_upload_log import (
+    get_parent_id_by_pecha_collection_id,
 )
 
 
@@ -54,7 +58,7 @@ class TextGroupsService:
             else:
                 commentary_text_ids.append(text["id"])
 
-            # await self.get_text_meta_data_service(related_text_ids, "translation")
+            await self.get_text_meta_data_service(related_text_ids, "translation")
             await self.get_text_meta_data_service(commentary_text_ids, "commentary")
 
 
@@ -212,7 +216,13 @@ class TextGroupsService:
             raw_title = title
             break
 
-        categories = [text["category_id"]] if text["category_id"] else []
+        # Look up the collection ID from collection_upload_log by category_id (pecha_collection_id)
+        collection_id = None
+        if text["category_id"]:
+            id = get_parent_id_by_pecha_collection_id(text["category_id"])
+        
+        categories = [id] if id else []
+        
         return TextGroupPayload(
             pecha_text_id=critical_instance["id"],
             title=raw_title,

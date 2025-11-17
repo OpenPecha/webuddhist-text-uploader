@@ -13,14 +13,16 @@ async def pipeline():
     print("collection uploaded successfully")
 
     # # text group upload
-    text_group = TextGroupsService()
-    await text_group.upload_tests_new_service()
+    # text_group = TextGroupsService()
+    # await text_group.upload_tests_new_service()
 
     print("text group uploaded successfully")
 
-    # #segment upload
-    # segment = SegmentService()
-    # await segment.upload_segments()
+    #segment upload
+
+    segment = SegmentService()
+    await segment.upload_segments()
+    print("segment uploaded successfully")
 
 
 if __name__ == "__main__":

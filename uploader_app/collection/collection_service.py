@@ -2,6 +2,10 @@ from typing import Any
 from uploader_app.collection.collection_repository import get_collections, post_collections
 from uploader_app.config import OpenPechaAPIURL, COLLECTION_LANGUAGES
 from uploader_app.collection.collection_model import CollectionPayload
+from uploader_app.collection.collection_upload_log import (
+    log_uploaded_collection,
+    get_parent_id_by_pecha_collection_id,
+)
 
 
 class CollectionService:
@@ -40,14 +44,32 @@ class CollectionService:
         # backend, capturing the *destination* IDs so they can be used as
         # `parent_id` for the next level.
         for payload in multilingual_payloads:
+            # Determine parent_id: if local_parent_id is provided, use it.
+            # Otherwise, look up the parent in the CSV using the parent's pecha_collection_id
+            parent_id_to_use = local_parent_id
+            
+            # If we don't have a local_parent_id but this collection has a parent,
+            # try to find the parent's destination ID from the CSV log
+            if parent_id_to_use is None:
+                parent_pecha_id = payload.get("parent_id")
+                if parent_pecha_id:
+                    # Normalize parent pecha_collection_id if it's in dict format
+                    if isinstance(parent_pecha_id, dict) and "$oid" in parent_pecha_id:
+                        parent_pecha_id = str(parent_pecha_id["$oid"])
+                    elif parent_pecha_id is not None:
+                        parent_pecha_id = str(parent_pecha_id)
+                    
+                    # Look up parent's destination ID from CSV
+                    if parent_pecha_id:
+                        parent_id_to_use = get_parent_id_by_pecha_collection_id(parent_pecha_id)
+
             collection_model = CollectionPayload(
                 pecha_collection_id=payload.get("pecha_collection_id"),
                 slug=payload.get("slug"),
                 titles=payload.get("titles"),
                 descriptions=payload.get("descriptions"),
-                # Use the **local** parent_id (from previously created collection),
-                # not the source OpenPecha parent.
-                parent_id=local_parent_id,
+                # Use the resolved parent_id (from parameter or CSV lookup)
+                parent_id=parent_id_to_use,
             )
 
             # Upload to webuddhist backend. We send the full multilingual
@@ -67,6 +89,16 @@ class CollectionService:
                 payload["local_id"] = str(raw_local_id)
             else:
                 payload["local_id"] = None
+
+            # Log the uploaded collection to CSV
+            if payload["local_id"]:
+                # Get the English title for logging
+                title = payload.get("titles", {}).get("en", "")
+                log_uploaded_collection(
+                    id=payload["local_id"],
+                    pecha_collection_id=payload.get("pecha_collection_id", ""),
+                    title=title,
+                )
 
         # For each payload that has children, fetch and attach them recursively.
         for payload in multilingual_payloads:
