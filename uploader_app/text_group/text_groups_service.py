@@ -37,28 +37,28 @@ class TextGroupsService:
 
         texts = await self.get_texts_service()
         text_types = [text["type"] for text in texts]
-        print("text_types >>>>>>>>>>>>>>>>>",text_types)
 
         
 
         for text in texts:
             pass
-        related_text_ids = []
-        commentary_text_ids = []
-        text_related_by_work_response = await get_text_related_by_work("OSAXnBbZum76NfGBqvbjf")
-        for key in text_related_by_work_response.keys():
-            if text_related_by_work_response[key]["relation"] in VERSION_TEXT_TYPE:
-                expression_ids = text_related_by_work_response[key]["expression_ids"]
-                related_text_ids = expression_ids
+            related_text_ids = []
+            commentary_text_ids = []
+            text_id = text["id"]
+            text_related_by_work_response = await get_text_related_by_work(text_id)
+            for key in text_related_by_work_response.keys():
+                if text_related_by_work_response[key]["relation"] in VERSION_TEXT_TYPE:
+                    expression_ids = text_related_by_work_response[key]["expression_ids"]
+                    related_text_ids = expression_ids
+                else:
+                    commentary_ids = text_related_by_work_response[key]["expression_ids"]
+                    commentary_text_ids = commentary_ids
+            if text["type"] in VERSION_TEXT_TYPE:
+                related_text_ids.append(text_id)
             else:
-                commentary_ids = text_related_by_work_response[key]["expression_ids"]
-                commentary_text_ids = commentary_ids
-        if text["type"] in VERSION_TEXT_TYPE:
-            related_text_ids.append("OSAXnBbZum76NfGBqvbjf") 
-        else:
-            commentary_text_ids.append("OSAXnBbZum76NfGBqvbjf")
-        await self.get_text_meta_data_service(related_text_ids, "translation")
-        await self.get_text_meta_data_service(commentary_text_ids, "commentary")
+                commentary_text_ids.append(text_id)
+            await self.get_text_meta_data_service(related_text_ids, "translation")
+            await self.get_text_meta_data_service(commentary_text_ids, "commentary")
 
 
     async def get_text_meta_data_service(self, text_ids: List[str], type: str):
@@ -83,7 +83,6 @@ class TextGroupsService:
                 return
             pecha_id = text_payload.pecha_text_id
 
-            print("pecha_id >>>>>>>>>>>>>>>>>",pecha_id, has_been_uploaded(pecha_id, text_payload.type))
             # Skip upload if this text was already uploaded (checked via CSV log).
             if pecha_id and has_been_uploaded(pecha_id, text_payload.type):
                 print(f"Skipping already uploaded version text: {pecha_id} >>> ({text_payload.title})"
