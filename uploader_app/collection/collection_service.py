@@ -76,6 +76,7 @@ class CollectionService:
             # Upload to webuddhist backend. We send the full multilingual
             # payload body, and use "en" as the request language context.
             response_data = await post_collections("en", collection_model)
+            print("collection uploaded successfully")
 
             # Extract the newly created destination collection ID so it can be
             # used as the parent for this node's children.
