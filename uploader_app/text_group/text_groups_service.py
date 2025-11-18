@@ -140,7 +140,6 @@ class TextGroupsService:
             get_related_texts_response = await get_related_texts(instance_id)
 
             grouped_text_by_type = self.group_instances_by_type(get_related_texts_response)
-            print("get_related_texts_response >>>>>>>>>>>>>>>>>",grouped_text_by_type)
             # Fetch all groups for the selected text.
             # text_groups = await get_text_groups(text["id"])
             # print("text_groups >>>>>>>>>>>>>>>>>",text_groups)

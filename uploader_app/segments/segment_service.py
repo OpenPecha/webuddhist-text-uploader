@@ -22,34 +22,20 @@ from uploader_app.segments.segment_model import ManifestationModel
 
 LOG_PATH = Path(TEXT_UPLOAD_LOG_FILE)
 MANIFESTATION_LOG_PATH = Path("manifestation_status_log.csv")
+SEGMENTS_UPLOAD_LOG_PATH = Path("segments_upload_log.csv")
 
 class SegmentService:
 
     async def upload_segments(self):
         text_pairs = await self.get_pecha_text_ids_from_csv()
-        manifestation_data = []  # Store manifestation status and text id for each text
-        
-        # for pecha_text_id, text_id in text_pairs:
-        #     try:    
-        #         # Check if the text_id is already in the CSV
-        #         manifestation_response = await get_manifestation_by_text_id(pecha_text_id)
-        #         manifestation_model = ManifestationModel(**manifestation_response)
-        #         # Store manifestation status and text id
-        #         manifestation_data.append({
-        #             "text_id": pecha_text_id,
-        #             "status": manifestation_model.status,
-        #             "job_id": manifestation_model.job_id,
-        #             "message": manifestation_model.message
-        #         })
-        #     except requests.exceptions.HTTPError as e:
-        #         print(f"HTTP error for text_id={pecha_text_id}: {e}")
-        #         continue
-        #     except Exception as e:
-        #         print(f"Unexpected error for text_id={pecha_text_id}: {e}")
-        #         continue
-        # self.save_manifestation_data_to_csv(manifestation_data)
+
         try:
             for pecha_text_id, text_id in text_pairs:
+                # Check if segments for this text_id have already been uploaded
+                if self.is_segments_already_uploaded(text_id):
+                    print(f"Segments for text_id {text_id} already uploaded. Skipping...")
+                    continue
+                
                 instance = await self.get_segments_annotation_by_pecha_text_id(pecha_text_id)
                 annotation_ids = self.get_annotation_ids(instance)
                 annotation_sengments = await get_segments_id_by_annotation_id(annotation_ids[0])
@@ -59,18 +45,19 @@ class SegmentService:
                 # print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
                 segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
                 await self.create_segments_payload(text_id, segments_content)
+                self.log_completed_segments_upload(text_id, len(segments_content))
                 # print("create_segments>>>>>>>>>>>>>>>>> completed")
                 # # upload_mappings_response = upload_mappings(relation_text)
                 # print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
         except Exception as e:
             print("Error in upload_segments >>>>>>>>>>>>>>>>>",e)
-            raise e
+
 
 
 
     async def create_segments_payload(self, text_id: str, segments_content: List[dict[str, Any]]) -> List[dict[str, Any]]:
 
-        payload = {}
+        
         for segment in segments_content:
             payload = {
                 "pecha_segment_id": segment["segment_id"],
@@ -83,6 +70,7 @@ class SegmentService:
                 ]
             }
             post_segments_response = await post_segments(payload)
+            
             print("post_segments_response >>>>>>>>>>>>>>>>>",post_segments_response)
 
     
@@ -194,5 +182,42 @@ class SegmentService:
                     data.get("message", ""),
                     timestamp
                 ])
+    
+    def is_segments_already_uploaded(self, text_id: str) -> bool:
+        """
+        Check if segments for a given text_id have already been uploaded.
+        Returns True if text_id exists in segments_upload_log.csv, False otherwise.
+        """
+        if not SEGMENTS_UPLOAD_LOG_PATH.exists():
+            return False
+        
+        with SEGMENTS_UPLOAD_LOG_PATH.open("r", newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get("text_id") == text_id:
+                    return True
+        
+        return False
+    
+    def log_completed_segments_upload(self, text_id: str, segment_count: int) -> None:
+        """
+        Log text_id to CSV after all segments have been successfully uploaded.
+        CSV format: text_id, segment_count, timestamp
+        """
+        # Ensure parent directory exists
+        SEGMENTS_UPLOAD_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Check if file exists to determine if we need to write header
+        file_exists = SEGMENTS_UPLOAD_LOG_PATH.exists()
+        
+        # Append the text_id to the CSV
+        with SEGMENTS_UPLOAD_LOG_PATH.open("a", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
             
-  
+            # Write header if file is new
+            if not file_exists:
+                writer.writerow(["text_id", "segment_count", "timestamp"])
+            
+            # Write the text_id entry
+            timestamp = datetime.now().isoformat()
+            writer.writerow([text_id, segment_count, timestamp])
