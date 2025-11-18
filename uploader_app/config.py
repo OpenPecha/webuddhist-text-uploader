@@ -6,7 +6,7 @@ ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnp
 
 APPLICATION = "webuddhist"
 
-COLLECTION_LANGUAGES = ["bo", "en"]
+COLLECTION_LANGUAGES = ["bo", "en", "zh"]
 
 # CSV file used to log which texts have already been uploaded.
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -20,7 +20,6 @@ class TextType(Enum):
     TRANSLATION_SOURCE = "translation_source"
     NONE = None
 
-
 VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value, TextType.NONE.value]
 
 
@@ -32,5 +31,5 @@ class SQSURL(Enum):
 
 
 class DestinationURL(Enum):
-    LOCAL = "https://webuddhist-dev-backend.onrender.com/api/v1"
+    LOCAL = "http://127.0.0.1:8000/api/v1"
 
