@@ -44,6 +44,11 @@ class SegmentService:
                 # segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
                 # print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
                 segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
+                # INSERT_YOUR_CODE
+                # Check if text_id is already in the segments upload log; if so, skip
+                if self.is_segments_already_uploaded(text_id):
+                    print(f"Segments for text_id {text_id} already uploaded (detected in log). Skipping create_segments_payload...")
+                    continue
                 await self.create_segments_payload(text_id, segments_content)
                 self.log_completed_segments_upload(text_id, len(segments_content))
                 # print("create_segments>>>>>>>>>>>>>>>>> completed")
@@ -56,22 +61,32 @@ class SegmentService:
 
 
     async def create_segments_payload(self, text_id: str, segments_content: List[dict[str, Any]]) -> List[dict[str, Any]]:
-
+        """
+        Create and post segments in batches to avoid payload size limits.
+        """
+        batch_size = 100  # Adjust batch size as needed
+        total_segments = len(segments_content)
         
-        for segment in segments_content:
+        print(f"Posting {total_segments} segments in batches of {batch_size}...")
+        
+        for i in range(0, total_segments, batch_size):
+            batch = segments_content[i:i + batch_size]
+            batch_number = (i // batch_size) + 1
+            total_batches = (total_segments + batch_size - 1) // batch_size
+            
             payload = {
-                "pecha_segment_id": segment["segment_id"],
                 "text_id": text_id,
                 "segments": [
                     {
+                        "pecha_segment_id": segment["segment_id"],
                         "content": segment["content"],
                         "type": "source",
-                    }
+                    } for segment in batch
                 ]
             }
-            post_segments_response = await post_segments(payload)
             
-            print("post_segments_response >>>>>>>>>>>>>>>>>",post_segments_response)
+            print(f"Posting batch {batch_number}/{total_batches} ({len(batch)} segments)...")
+            await post_segments(payload)
 
     
     def generate_weBuddhist_mapping_payload(self, mapping):
@@ -192,9 +207,16 @@ class SegmentService:
             return False
         
         with SEGMENTS_UPLOAD_LOG_PATH.open("r", newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+            reader = csv.reader(f)
             for row in reader:
-                if row.get("text_id") == text_id:
+                # Skip empty rows
+                if not row or len(row) == 0:
+                    continue
+                # Skip header row if it exists
+                if row[0] == "text_id":
+                    continue
+                # Check if the first column (text_id) matches
+                if row[0] == text_id:
                     return True
         
         return False
