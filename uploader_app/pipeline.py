@@ -24,17 +24,17 @@ async def pipeline():
 
     # segment = SegmentService()
     # await segment.upload_segments()
-    # print("segment uploaded successfully")
+    print("segment uploaded successfully")
 
     #toc upload
-    toc = TocService()
-    await toc.upload_toc()
+    # toc = TocService()
+    # await toc.upload_toc()
     print("toc uploaded successfully")
 
     #trigger mapping service
-    # mapping = MappingService()
-    # await mapping.trigger_mapping_service()
-    # print("mapping triggered successfully")
+    mapping = MappingService()
+    await mapping.trigger_mapping_service()
+    print("mapping triggered successfully")
 
 
 if __name__ == "__main__":

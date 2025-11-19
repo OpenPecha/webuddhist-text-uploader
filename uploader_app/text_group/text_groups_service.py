@@ -140,18 +140,7 @@ class TextGroupsService:
             get_related_texts_response = await get_related_texts(instance_id)
 
             grouped_text_by_type = self.group_instances_by_type(get_related_texts_response)
-            # Fetch all groups for the selected text.
-            # text_groups = await get_text_groups(text["id"])
-            # print("text_groups >>>>>>>>>>>>>>>>>",text_groups)
-
-            # Group them by type for downstream use.
-            # Remove any group with type 'translation_source' from text_groups
-            # filtered_text_groups = [
-            #     group
-            #     for group in text_groups["texts"]
-            #     if group.get("type") != TextType.TRANSLATION_SOURCE.value
-            # ]
-
+            
             # Upload groups to webuddhist backend
             for key in grouped_text_by_type.keys():
                 group_response = await post_group(key)
