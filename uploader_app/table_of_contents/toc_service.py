@@ -19,7 +19,7 @@ class TocService:
             annotation_sengments = await self.segment_service.get_segments_by_id_list(annotation_ids[0])
             ordered_segments = await self.order_segments_by_annotation_span(annotation_sengments)
             create_toc_payload = await self.create_toc_payload(ordered_segments, text_id)
-            response = await post_toc(create_toc_payload)
+            await post_toc(create_toc_payload)
         
     async def order_segments_by_annotation_span(self, annotation_sengments: dict[str, Any]):
 
@@ -35,6 +35,7 @@ class TocService:
         section_id = str(uuid.uuid4())
         payload = {
             "text_id": text_id,
+            "type": "text",
             "sections": [
                 {
                     "id": section_id,
