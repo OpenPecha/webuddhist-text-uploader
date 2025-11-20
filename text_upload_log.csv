@@ -1,14 +1,15 @@
-pecha_text_id,text_id,text_type,title,language,source_link,category_id,version_group_id
-lTpsBB5huyuaZBfLG4ABH,4ee028c2-9765-4668-aee5-4da832529cc6,version,The Way of the Bodhisattva,en,bdrc.io,kj8dljKGdBUuL4GkkVXbB,89d053c7-467a-4ab1-bcfa-e7c99eb6188d
-psm0stQ8FI5KIf8TG48gs,5c92f053-fa6c-4e3f-b73b-6203b54ff9b5,version,菩萨行论,zh,bdrc.io,kj8dljKGdBUuL4GkkVXbB,89d053c7-467a-4ab1-bcfa-e7c99eb6188d
-eyAZS3oiwelZVRj2EjpGS,75596793-bf7d-4393-a8b5-2257849dbd5e,version,བྱང་ཆུབ་སེམས་དཔའི་སྤྱོད་པ་ལ་འཇུག་པ།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,89d053c7-467a-4ab1-bcfa-e7c99eb6188d
-gxppCRxtGG3fGI446Tlv0,9019c3dc-683a-494c-952d-857b7ed0dc20,commentary,བྱང་ཆུབ་སེམས་དཔའི་སྤྱོད་པ་ལ་འཇུག་པའི་རྣམ་བཤད་རྒྱལ་སྲས་འཇུག་ངོགས།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,190946bd-3e9b-4f06-9891-152f97e7b3db
-L5bJSWGOlYhWWtzzjgCsY,52bd894d-4ffd-4da6-979c-d7db0750a575,commentary,སྤྱོད་འཇུག་ཟིན་བྲིས་དང་ཚིག་འགྲེལ་འཇམ་དབྱངས་བླ་མའི་ཞལ་ལུང་བདུད་རྩིའི་ཐིག་པ།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,f376492b-a48e-4b42-9368-63b116a18592
-tbUThSiAsaqsHEYWG6DYg,71f12c34-fdff-4fd1-849d-c5a11b603a67,version,Praise to Tara,en,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-XN1BUfQpqqmfK2KrkeDPA,91a80507-ea88-4053-8adb-c7982aa50a43,version,頂禮尊聖救度母,zh,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-SRIGexZ1drOvykllRVNBX,d76151ea-df7e-4723-9eef-2bc17e37d495,version,སྒྲོལ་མ་ལ་ཕྱག་འཚལ་གྱི་ཡོད།,tib,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-DhCj1O5zTN0ik0Ovv4TEV,a353fbe1-f01a-49e1-876b-68a2158279b8,version,སྒྲོལ་མ་ཉེར་གཅིག་ལ་བསྟོད་པ།,bo,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-l7MK8Mmjgc9fEp9xXH2js,bb984059-b74b-4ddb-a608-0f09181cc027,version,"The Blessed Lady, Heart of the Perfection of Wisdom.",en,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-XTodlXpZipeAG9F0dQHz2,1b357ee8-f935-4a80-84a9-2701e07c0a06,version,般若波羅密多心經,zh,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-zuY732veO5DR8IWusNA1L,5da5577d-dd91-4bd8-8089-44df94631e27,version,ཤེས་རབ་ཀྱི་སྙིང་པོ་,tib,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
-zBIkELQDbG52Byg781a2d,00b82b5d-6314-47dc-bdd9-64e6fc53b874,version,བཅོམ་ལྡན་འདས་མ་ཤེས་རབ་ཀྱི་ཕ་རོལ་ཏུ་ཕྱིན་པའི་སྙིང་པོ།,bo,bdrc.io,dJpr4gMF72E4UpCnJ84sh,bf00016d-3717-47c0-af97-85f9c087c2c9
+pecha_text_id,text_id,text_type,title,language,source_link,category_id,version_group_id,log_group_id
+lTpsBB5huyuaZBfLG4ABH,c31b1ccc-640c-4944-974a-72f950af5f34,version,The Way of the Bodhisattva,en,bdrc.io,kj8dljKGdBUuL4GkkVXbB,d80cdae8-ed05-46b4-8830-5a04ffac2d62,90621623-c27a-4eb7-be25-dc168ae79447
+psm0stQ8FI5KIf8TG48gs,daf1bdb8-2138-4ea1-a233-f2f1425acbba,version,菩萨行论,zh,bdrc.io,kj8dljKGdBUuL4GkkVXbB,d80cdae8-ed05-46b4-8830-5a04ffac2d62,90621623-c27a-4eb7-be25-dc168ae79447
+eyAZS3oiwelZVRj2EjpGS,45e72c5a-6bc6-4a08-8d49-194217553bc9,version,བྱང་ཆུབ་སེམས་དཔའི་སྤྱོད་པ་ལ་འཇུག་པ།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,d80cdae8-ed05-46b4-8830-5a04ffac2d62,90621623-c27a-4eb7-be25-dc168ae79447
+xBQqT2xHuXwIxqGnQuqRS,4e126ab8-c8c5-4e8c-875e-fd031f05795b,commentary,སྤྱོད་འཇུག་འགྲེལ་པ་རབ་ཏུ་གསལ་བ།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,9370e7b9-b780-4a25-a577-09ae95f99859,
+L5bJSWGOlYhWWtzzjgCsY,5c64040c-8d04-4576-9fb3-3a36e497ea7a,commentary,སྤྱོད་འཇུག་ཟིན་བྲིས་དང་ཚིག་འགྲེལ་འཇམ་དབྱངས་བླ་མའི་ཞལ་ལུང་བདུད་རྩིའི་ཐིག་པ།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,cd3c4d5e-c538-4ed4-81d0-2d24818aec10,
+gxppCRxtGG3fGI446Tlv0,92239647-6384-499f-9085-4427bd641ce9,commentary,བྱང་ཆུབ་སེམས་དཔའི་སྤྱོད་པ་ལ་འཇུག་པའི་རྣམ་བཤད་རྒྱལ་སྲས་འཇུག་ངོགས།,bo,bdrc.io,kj8dljKGdBUuL4GkkVXbB,90a193f7-3c7e-40c6-8733-bd6bbba330ce,
+tbUThSiAsaqsHEYWG6DYg,f90bb5c7-c263-4231-9a1b-581cb4b271e3,version,Praise to Tara,en,bdrc.io,dJpr4gMF72E4UpCnJ84sh,6bbf14a9-ecf4-4769-96f9-69f549f41fe6,25350169-4ed4-4ad3-baac-21d8c16948fc
+XN1BUfQpqqmfK2KrkeDPA,4784fb58-9600-48aa-89d0-38a34617ace7,version,頂禮尊聖救度母,zh,bdrc.io,dJpr4gMF72E4UpCnJ84sh,6bbf14a9-ecf4-4769-96f9-69f549f41fe6,25350169-4ed4-4ad3-baac-21d8c16948fc
+SRIGexZ1drOvykllRVNBX,c674623b-348e-492a-b9cf-cf27a569fc9d,version,སྒྲོལ་མ་ལ་ཕྱག་འཚལ་གྱི་ཡོད།,tib,bdrc.io,dJpr4gMF72E4UpCnJ84sh,6bbf14a9-ecf4-4769-96f9-69f549f41fe6,25350169-4ed4-4ad3-baac-21d8c16948fc
+DhCj1O5zTN0ik0Ovv4TEV,4a8dce8d-1a51-4eb8-b539-69ce816d76a3,version,སྒྲོལ་མ་ཉེར་གཅིག་ལ་བསྟོད་པ།,bo,bdrc.io,dJpr4gMF72E4UpCnJ84sh,6bbf14a9-ecf4-4769-96f9-69f549f41fe6,25350169-4ed4-4ad3-baac-21d8c16948fc
+l7MK8Mmjgc9fEp9xXH2js,875cbab3-e3b5-47dd-8016-216c9253a6ed,version,"The Blessed Lady, Heart of the Perfection of Wisdom.",en,bdrc.io,dJpr4gMF72E4UpCnJ84sh,c640668f-a5f2-49a9-b136-8ad88eeed041,1103675a-2696-4089-aefc-264837cdf1b8
+XTodlXpZipeAG9F0dQHz2,83685fdc-fe62-4988-b20b-ab0ea331f654,version,般若波羅密多心經,zh,bdrc.io,dJpr4gMF72E4UpCnJ84sh,c640668f-a5f2-49a9-b136-8ad88eeed041,1103675a-2696-4089-aefc-264837cdf1b8
+zuY732veO5DR8IWusNA1L,7008845e-249f-4c37-bb3a-cb4f85a356ae,version,ཤེས་རབ་ཀྱི་སྙིང་པོ་,tib,bdrc.io,dJpr4gMF72E4UpCnJ84sh,c640668f-a5f2-49a9-b136-8ad88eeed041,1103675a-2696-4089-aefc-264837cdf1b8
+zBIkELQDbG52Byg781a2d,73753096-ec5c-4f12-bb84-05c8bd006902,version,བཅོམ་ལྡན་འདས་མ་ཤེས་རབ་ཀྱི་ཕ་རོལ་ཏུ་ཕྱིན་པའི་སྙིང་པོ།,bo,bdrc.io,dJpr4gMF72E4UpCnJ84sh,c640668f-a5f2-49a9-b136-8ad88eeed041,1103675a-2696-4089-aefc-264837cdf1b8

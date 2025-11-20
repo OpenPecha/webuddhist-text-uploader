@@ -18,6 +18,7 @@ LOG_HEADER = [
     "source_link",
     "category_id",
     "version_group_id",
+    "log_group_id",
 ]
 
 # Old header used before text_id was tracked.
@@ -31,6 +32,18 @@ PREVIOUS_LOG_HEADER = [
     "title",
     "language",
     "source_link",
+]
+
+# Header before log_group_id was added
+BEFORE_LOG_GROUP_HEADER = [
+    "pecha_text_id",
+    "text_id",
+    "text_type",
+    "title",
+    "language",
+    "source_link",
+    "category_id",
+    "version_group_id",
 ]
 
 
@@ -71,6 +84,14 @@ def _ensure_log_file() -> None:
 
     if existing_header == PREVIOUS_LOG_HEADER:
         # Upgrade from previous header to current one
+        with LOG_PATH.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(LOG_HEADER)
+            f.writelines(lines[1:])
+        return
+
+    if existing_header == BEFORE_LOG_GROUP_HEADER:
+        # Upgrade from before log_group_id header to current one
         with LOG_PATH.open("w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(LOG_HEADER)
@@ -133,6 +154,25 @@ def get_version_group_id_by_category_id(category_id: str) -> str | None:
     return None
 
 
+def get_version_group_id_by_log_group_and_category(log_group_id: str, category_id: str) -> str | None:
+    """
+    Look up version_group_id from the CSV by matching both log_group_id and category_id.
+    Returns the first matching version_group_id, or None if not found.
+    """
+    if not LOG_PATH.exists():
+        return None
+
+    with LOG_PATH.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if (row.get("log_group_id") == log_group_id and 
+                row.get("category_id") == category_id and 
+                row.get("version_group_id")):
+                return row.get("version_group_id")
+
+    return None
+
+
 def log_uploaded_text(
     pecha_text_id: str,
     text_type: str,
@@ -142,6 +182,7 @@ def log_uploaded_text(
     source_link: str | None = None,
     category_id: str | None = None,
     version_group_id: str | None = None,
+    log_group_id: str | None = None,
 ) -> None:
 
     _ensure_log_file()
@@ -158,6 +199,7 @@ def log_uploaded_text(
                 source_link or "",
                 category_id or "",
                 version_group_id or "",
+                log_group_id or "",
             ]
         )
 
