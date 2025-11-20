@@ -2,7 +2,7 @@ from enum import Enum
 
 import os
 
-ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FtZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2MzY0OTQyMiwiZXhwIjoxNzgxNjQ5NDIyfQ.5H-Eh8VFnvj6C1qg_9ZS1mTQT38-HJd8LxNzswlaqeU"
+ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FuZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLm9yZyIsImlhdCI6MTc2MzY1NjU2OCwiZXhwIjoxOTQzNjU2NTY4fQ.KSXZswVlv80hdYciMGNkFQbJcVL4kNYoD-GWzp8vHrI"
 
 APPLICATION = "webuddhist"
 
@@ -31,5 +31,5 @@ class SQSURL(Enum):
 
 
 class DestinationURL(Enum):
-    LOCAL = "https://webuddhist-dev-backend.onrender.com/api/v1"
+    LOCAL = "http://127.0.0.1:8000/api/v1"
 
