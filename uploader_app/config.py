@@ -2,7 +2,7 @@ from enum import Enum
 
 import os
 
-ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FuZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLm9yZyIsImlhdCI6MTc2MzY1NjU2OCwiZXhwIjoxOTQzNjU2NTY4fQ.KSXZswVlv80hdYciMGNkFQbJcVL4kNYoD-GWzp8vHrI"
+ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FtZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2Mzc5MjU1NiwiZXhwIjoxNzgxNzkyNTU2fQ.Yc9FTstCDjMFXOhPsQswDS9Z8wSbvQqPxqUEysN8eAA"
 
 APPLICATION = "webuddhist"
 
@@ -20,7 +20,7 @@ class TextType(Enum):
     TRANSLATION_SOURCE = "translation_source"
     NONE = None
 
-VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value, TextType.NONE.value]
+VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value, TextType.NONE.value, TextType.ROOT.value]
 
 
 class OpenPechaAPIURL(Enum):
@@ -31,5 +31,5 @@ class SQSURL(Enum):
 
 
 class DestinationURL(Enum):
-    LOCAL = "http://127.0.0.1:8000/api/v1"
+    LOCAL = "https://webuddhist-dev-backend.onrender.com/api/v1"
 

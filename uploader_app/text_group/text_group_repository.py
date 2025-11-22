@@ -7,12 +7,14 @@ from uploader_app.config import OpenPechaAPIURL, DestinationURL, ACCESS_TOKEN
 from uploader_app.text_group.text_group_model import TextGroupPayload
 
 
-async def get_texts(type: str | None = None) -> list[dict[str, Any]]:
+async def get_texts(type: str | None = None, limit: int | None = None, offset: int | None = None) -> list[dict[str, Any]]:
     texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/texts"
 
     # `requests` is synchronous; run it in a thread so callers can still await.
     params = {
         "type": type,
+        "limit": 100,
+        "offset": 0,
     }
     response = await asyncio.to_thread(requests.get, texts_url, params=params)
     response.raise_for_status()

@@ -40,12 +40,18 @@ class SegmentService:
                 annotation_ids = self.get_annotation_ids(instance)
                 annotation_sengments = await get_segments_id_by_annotation_id(annotation_ids[0])
                 segments_ids = [segment["id"] for segment in annotation_sengments["data"]]
-                print("annotation_ids >>>>>>>>>>>>>>>>>",segments_ids)
-                # segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
-                # print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
-                segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
-                # INSERT_YOUR_CODE
-                # Check if text_id is already in the segments upload log; if so, skip
+                print(f"{pecha_text_id} annotation_ids length >>>>>>>>>>>>>>>>>",len(segments_ids))
+                # Process segment_ids in batches to manage batch size
+                batch_size = 2000  # you can adjust the batch size as needed
+                all_segments_content = []
+                for i in range(0, len(segments_ids), batch_size):
+                    batch_segment_ids = segments_ids[i:i+batch_size]
+                    print(f"{pecha_text_id} batch_segment_ids length >>>>>>>>>>>>>>>>>",len(batch_segment_ids))
+                    # For each batch, get segment content and accumulate
+                    batch_content = await self._get_segments_content(batch_segment_ids, pecha_text_id)
+                    all_segments_content.extend(batch_content)
+                segments_content = all_segments_content
+        
                 if self.is_segments_already_uploaded(text_id):
                     print(f"Segments for text_id {text_id} already uploaded (detected in log). Skipping create_segments_payload...")
                     continue
