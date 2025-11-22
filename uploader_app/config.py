@@ -2,11 +2,11 @@ from enum import Enum
 
 import os
 
-ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FtZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2MzQ1OTk3NiwiZXhwIjoxNzgxNDU5OTc2fQ.YaTA5LPVCQhCbdVIfN7EA6a0lljJN2OV57srGZGF-HQ"
+ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FtZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2Mzc5MjU1NiwiZXhwIjoxNzgxNzkyNTU2fQ.Yc9FTstCDjMFXOhPsQswDS9Z8wSbvQqPxqUEysN8eAA"
 
 APPLICATION = "webuddhist"
 
-COLLECTION_LANGUAGES = ["bo", "en"]
+COLLECTION_LANGUAGES = ["bo", "en", "zh"]
 
 # CSV file used to log which texts have already been uploaded.
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -20,8 +20,7 @@ class TextType(Enum):
     TRANSLATION_SOURCE = "translation_source"
     NONE = None
 
-
-VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value, TextType.NONE.value]
+VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.TRANSLATION_SOURCE.value, TextType.NONE.value, TextType.ROOT.value]
 
 
 class OpenPechaAPIURL(Enum):
