@@ -57,9 +57,6 @@ class SegmentService:
                     continue
                 await self.create_segments_payload(text_id, segments_content)
                 self.log_completed_segments_upload(text_id, len(segments_content))
-                # print("create_segments>>>>>>>>>>>>>>>>> completed")
-                # # upload_mappings_response = upload_mappings(relation_text)
-                # print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
         except Exception as e:
             print("Error in upload_segments >>>>>>>>>>>>>>>>>",e)
 
@@ -133,12 +130,6 @@ class SegmentService:
         return manifestation_records
     
     async def _get_segments_content(self, segment_ids: List[str], pecha_text_id: str) -> List[dict[str, Any]]:
-        # segments_content = []
-        # batch_size = 1000
-        # for i in range(0, len(segment_ids), batch_size):
-        #     batch = segment_ids[i:i + batch_size]
-        #     get_segment_content_response = await get_segment_content(batch, pecha_text_id)
-        #     segments_content.append(get_segment_content_response)
         get_segment_content_response = await get_segment_content(segment_ids, pecha_text_id)
         return get_segment_content_response
 
