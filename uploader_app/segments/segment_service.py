@@ -40,15 +40,23 @@ class SegmentService:
                 annotation_ids = self.get_annotation_ids(instance)
                 annotation_sengments = await get_segments_id_by_annotation_id(annotation_ids[0])
                 segments_ids = [segment["id"] for segment in annotation_sengments["data"]]
-                print("annotation_ids >>>>>>>>>>>>>>>>>",segments_ids)
-                # segments_ids = [segment["segment_id"] for segment in relation_text["segments"]]
-                # print("Extracted segments_ids >>>>>>>>>>>>>>>>> completed")
-                segments_content = await self._get_segments_content(segments_ids, pecha_text_id)
+                print(f"{pecha_text_id} annotation_ids length >>>>>>>>>>>>>>>>>",len(segments_ids))
+                # Process segment_ids in batches to manage batch size
+                batch_size = 2000  # you can adjust the batch size as needed
+                all_segments_content = []
+                for i in range(0, len(segments_ids), batch_size):
+                    batch_segment_ids = segments_ids[i:i+batch_size]
+                    print(f"{pecha_text_id} batch_segment_ids length >>>>>>>>>>>>>>>>>",len(batch_segment_ids))
+                    # For each batch, get segment content and accumulate
+                    batch_content = await self._get_segments_content(batch_segment_ids, pecha_text_id)
+                    all_segments_content.extend(batch_content)
+                segments_content = all_segments_content
+        
+                if self.is_segments_already_uploaded(text_id):
+                    print(f"Segments for text_id {text_id} already uploaded (detected in log). Skipping create_segments_payload...")
+                    continue
                 await self.create_segments_payload(text_id, segments_content)
                 self.log_completed_segments_upload(text_id, len(segments_content))
-                # print("create_segments>>>>>>>>>>>>>>>>> completed")
-                # # upload_mappings_response = upload_mappings(relation_text)
-                # print("upload_mappings_response >>>>>>>>>>>>>>>>> completed")
         except Exception as e:
             print("Error in upload_segments >>>>>>>>>>>>>>>>>",e)
 
@@ -56,22 +64,32 @@ class SegmentService:
 
 
     async def create_segments_payload(self, text_id: str, segments_content: List[dict[str, Any]]) -> List[dict[str, Any]]:
-
+        """
+        Create and post segments in batches to avoid payload size limits.
+        """
+        batch_size = 200  # Adjust batch size as needed
+        total_segments = len(segments_content)
         
-        for segment in segments_content:
+        print(f"Posting {total_segments} segments in batches of {batch_size}...")
+        
+        for i in range(0, total_segments, batch_size):
+            batch = segments_content[i:i + batch_size]
+            batch_number = (i // batch_size) + 1
+            total_batches = (total_segments + batch_size - 1) // batch_size
+            
             payload = {
-                "pecha_segment_id": segment["segment_id"],
                 "text_id": text_id,
                 "segments": [
                     {
+                        "pecha_segment_id": segment["segment_id"],
                         "content": segment["content"],
                         "type": "source",
-                    }
+                    } for segment in batch
                 ]
             }
-            post_segments_response = await post_segments(payload)
             
-            print("post_segments_response >>>>>>>>>>>>>>>>>",post_segments_response)
+            print(f"Posting batch {batch_number}/{total_batches} ({len(batch)} segments)...")
+            await post_segments(payload)
 
     
     def generate_weBuddhist_mapping_payload(self, mapping):
@@ -112,12 +130,6 @@ class SegmentService:
         return manifestation_records
     
     async def _get_segments_content(self, segment_ids: List[str], pecha_text_id: str) -> List[dict[str, Any]]:
-        # segments_content = []
-        # batch_size = 1000
-        # for i in range(0, len(segment_ids), batch_size):
-        #     batch = segment_ids[i:i + batch_size]
-        #     get_segment_content_response = await get_segment_content(batch, pecha_text_id)
-        #     segments_content.append(get_segment_content_response)
         get_segment_content_response = await get_segment_content(segment_ids, pecha_text_id)
         return get_segment_content_response
 
@@ -192,9 +204,16 @@ class SegmentService:
             return False
         
         with SEGMENTS_UPLOAD_LOG_PATH.open("r", newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+            reader = csv.reader(f)
             for row in reader:
-                if row.get("text_id") == text_id:
+                # Skip empty rows
+                if not row or len(row) == 0:
+                    continue
+                # Skip header row if it exists
+                if row[0] == "text_id":
+                    continue
+                # Check if the first column (text_id) matches
+                if row[0] == text_id:
                     return True
         
         return False

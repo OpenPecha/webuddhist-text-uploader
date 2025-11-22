@@ -34,7 +34,7 @@ async def pipeline():
     #trigger mapping service
     # mapping = MappingService()
     # await mapping.trigger_mapping_service()
-    # print("mapping triggered successfully")
+    print("mapping triggered successfully")
 
 
 if __name__ == "__main__":

@@ -64,6 +64,7 @@ async def get_segment_content(
             requests.post,
             url,
             json=payload,
+            timeout=100000,
         )
         response.raise_for_status()
         return response.json()
