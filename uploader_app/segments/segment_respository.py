@@ -11,7 +11,10 @@ async def get_segments_annotation(pecha_text_id: str) -> list[dict[str, Any]]:
     Fetch the list of segment annotations for a given Pecha text (instance).
     """
     instances_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/instances/{pecha_text_id}"
-    params = {"annotation": "true"}
+    params = {
+        "annotation": "true",
+        "content": "true"
+        }
 
     # `requests` is synchronous; run it in a thread so callers can still await.
     response = await asyncio.to_thread(
