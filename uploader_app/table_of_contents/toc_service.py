@@ -19,7 +19,8 @@ class TocService:
             annotation_sengments = await self.segment_service.get_segments_by_id_list(annotation_ids[0])
             ordered_segments = await self.order_segments_by_annotation_span(annotation_sengments)
             create_toc_payload = await self.create_toc_payload(ordered_segments, text_id)
-            await post_toc(create_toc_payload)
+            response = await post_toc(create_toc_payload)
+            print("toc >>>>>>>>>>>>>>>>>",response)
         
     async def order_segments_by_annotation_span(self, annotation_sengments: dict[str, Any]):
 
