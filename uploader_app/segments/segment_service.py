@@ -46,12 +46,11 @@ class SegmentService:
                 # Process segment_ids in batches to manage batch size
                 # segments_contents = await self.make_batch_segments_content(segments_ids, pecha_text_id)
                 segments_contents = self.parse_segments_content(annotation_sengments["data"], instance['content'])
-                print(f">>>>>>>>>>>>>>>>>",segments_contents)
                 if self.is_segments_already_uploaded(text_id):
                     print(f"Segments for text_id {text_id} already uploaded. Skipping...")
                     continue
-                # await self.create_segments_payload(text_id, segments_contents)
-                # self.log_completed_segments_upload(text_id, len(segments_contents))
+                await self.create_segments_payload(text_id, segments_contents)
+                self.log_completed_segments_upload(text_id, len(segments_contents))
         except Exception as e:
             print("Error in upload_segments >>>>>>>>>>>>>>>>>",e)
 
