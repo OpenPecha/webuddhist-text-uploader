@@ -46,26 +46,26 @@ class TextGroupsService:
 
         for text in texts:
             pass
-            related_text_ids = []
-            commentary_text_ids = []
-            work_translation_group = {}
-            text_id = text["id"]
-            text_related_by_work_response = await get_text_related_by_work(text_id)
-            for key in text_related_by_work_response.keys():
-                if text_related_by_work_response[key]["relation"] is not 'commentary':
-                    work_translation_group[key] = text_related_by_work_response[key]["expression_ids"]
-                    expression_ids = text_related_by_work_response[key]["expression_ids"]
-
-                    related_text_ids = expression_ids
-                else:
-                    commentary_ids = text_related_by_work_response[key]["expression_ids"]
-                    commentary_text_ids = commentary_ids
-            if text["type"] is not 'commentary':
-                related_text_ids.append(text_id)
+        related_text_ids = []
+        commentary_text_ids = []
+        work_translation_group = {}
+        # text_id = text["id"]
+        text_id = "pAQMRjNs2fRIrkGoehsnk"
+        text_related_by_work_response = await get_text_related_by_work(text_id)
+        for key in text_related_by_work_response.keys():
+            if text_related_by_work_response[key]["relation"] is not 'commentary':
+                work_translation_group[key] = text_related_by_work_response[key]["expression_ids"]
+                expression_ids = text_related_by_work_response[key]["expression_ids"]
+                related_text_ids = expression_ids
             else:
-                commentary_text_ids.append(text_id)
-            await self.get_text_meta_data_service(related_text_ids, "translation")
-            await self.get_text_meta_data_service(commentary_text_ids, "commentary")
+                commentary_ids = text_related_by_work_response[key]["expression_ids"]
+                commentary_text_ids = commentary_ids
+        if text["type"] is not 'commentary':
+            related_text_ids.append(text_id)
+        else:
+            commentary_text_ids.append(text_id)
+        await self.get_text_meta_data_service(related_text_ids, "translation")
+        await self.get_text_meta_data_service(commentary_text_ids, "commentary")
 
 
     async def get_text_meta_data_service(self, text_ids: List[str], type: str):

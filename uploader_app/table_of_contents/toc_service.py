@@ -3,6 +3,7 @@ import uuid
 
 from uploader_app.segments.segment_service import SegmentService
 from uploader_app.table_of_contents.toc_repository import post_toc
+from uploader_app.table_of_contents.toc_upload_log import log_uploaded_toc, is_toc_uploaded
 from uploader_app.config import TEXT_UPLOAD_LOG_FILE
 
 
@@ -14,13 +15,28 @@ class TocService:
         text_pairs = await self.segment_service.get_pecha_text_ids_from_csv()
 
         for pecha_text_id, text_id in text_pairs:
+            # Check if TOC already uploaded for this pecha_text_id
+            if is_toc_uploaded(pecha_text_id):
+                print(f"TOC already uploaded for pecha_text_id: {pecha_text_id}, skipping...")
+                continue
+            
             instance = await self.segment_service.get_segments_annotation_by_pecha_text_id(pecha_text_id)
             annotation_ids = self.segment_service.get_annotation_ids(instance)
             annotation_sengments = await self.segment_service.get_segments_by_id_list(annotation_ids[0])
             ordered_segments = await self.order_segments_by_annotation_span(annotation_sengments)
             create_toc_payload = await self.create_toc_payload(ordered_segments, text_id)
+            
+            
             response = await post_toc(create_toc_payload)
-            print("toc >>>>>>>>>>>>>>>>>",response)
+            print("toc uploaded successfully>>>>>>>>>>>>>>>>>",response["_id"])
+            
+        
+            # Log the uploaded TOC
+            log_uploaded_toc(
+                pecha_text_id=pecha_text_id,
+                id=response.get("_id"),
+                text_id=response.get("text_id")
+            )
         
     async def order_segments_by_annotation_span(self, annotation_sengments: dict[str, Any]):
 
