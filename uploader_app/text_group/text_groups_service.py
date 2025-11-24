@@ -77,29 +77,24 @@ class TextGroupsService:
 
         print("related_text_ids:>>>>>>>>>>>" , related_text_ids)
         print("commentary_text_ids:>>>>>>>>>>>" , commentary_text_ids)
-        await self.get_text_meta_data_service(related_text_ids, "translation")
-        await self.get_text_meta_data_service(commentary_text_ids, "commentary")
+        version_group_id = await self.get_text_meta_data_service(related_text_ids, "translation")
+        await self.get_text_meta_data_service(commentary_text_ids, "commentary", category_group_id=version_group_id)
 
 
-    async def get_text_meta_data_service(self, text_ids: List[str], type: str):
-
+    async def get_text_meta_data_service(self, text_ids: List[str], type: str, category_group_id: str = None):
+        
+        # Initialize version_group_id
+        version_group_id = None
+        
         if type == "translation":
-            # Check if any text_id in text_ids already has a log_group_id in the CSV
-            existing_log_group_id = None
+            # Check if any text_id already has a version_group_id in the CSV
             for text_id in text_ids:
-                existing_log_group_id = get_log_group_id_by_pecha_text_id(text_id)
-                if existing_log_group_id:
-                    print(f"Reusing existing log_group_id: {existing_log_group_id} for text_id: {text_id}")
+                version_group_id = get_log_group_id_by_pecha_text_id(text_id)
+                if version_group_id:
+                    print(f"Reusing existing version_group_id: {version_group_id} for text_id: {text_id}")
                     break
             
-            # Use existing log_group_id if found, otherwise create a new one
-            log_group_id = existing_log_group_id if existing_log_group_id else str(uuid())
-            
-        else:
-            log_group_id = None
         
-        
-            
         for text_id in text_ids:
             text_metadata = await get_text_metadata(text_id)
             
@@ -107,34 +102,21 @@ class TextGroupsService:
             category = text_metadata.get("category_id", "")
             
             if type == "translation":
-                # Create composite key for tracking groups by both log_group_id and category_id
-                composite_key = f"{log_group_id}:{category}"
+                if not version_group_id:
+                    group_response = await post_group('text')
+                    version_group_id = group_response["id"]
+                    print(f"Created new group {group_response['id']}, category_id={category}")
                 
-                # Check if we already have a group_id for this log_group_id + category_id combination
-                if composite_key not in self.category.keys():
-                    # First check if this log_group_id + category_id combination exists in text_upload_log
-                    existing_group_id = get_version_group_id_by_log_group_and_category(log_group_id, category)
-                    
-                    if existing_group_id:
-                        # Use existing group_id from log for this specific combination
-                        self.category[composite_key] = existing_group_id
-                    else:
-                        # Create new group for this log_group_id + category_id combination
-                        group_response = await post_group('text')
-                        self.category[composite_key] = group_response["id"]
-                        group_created_for_log_group = True
-                        print(f"Created new group {group_response['id']} for log_group_id={log_group_id}, category_id={category}")
-                
-                # Use the stored group_id for this log_group_id + category_id combination
-                group_id = self.category[composite_key]
-                await self.create_text_db(pecha_text_id=text_id, text_metadata=text_metadata, type='text', group_id=group_id, category_id=category, log_group_id=log_group_id)
+                await self.create_text_db(pecha_text_id=text_id, text_metadata=text_metadata, type='text', group_id=version_group_id, category_id=category, log_group_id=version_group_id)
                 
             elif type == "commentary":
                 commentary_group = await post_group('commentary')
                 commentary_group_id = commentary_group["id"]
-                await self.create_text_db(pecha_text_id=text_id, text_metadata=text_metadata, type='commentary', group_id=commentary_group_id, category_id=category, log_group_id=None)
+                await self.create_text_db(pecha_text_id=text_id, text_metadata=text_metadata, type='commentary', group_id=commentary_group_id, category_id=category, log_group_id=None, commentary_group_id=category_group_id)
+        
+        return version_group_id
 
-    async def create_text_db(self, pecha_text_id: str, text_metadata: dict[str, Any], type: str, group_id: str, category_id: str = "", log_group_id: str = None):
+    async def create_text_db(self, pecha_text_id: str, text_metadata: dict[str, Any], type: str, group_id: str, category_id: str = "", log_group_id: str = None, commentary_group_id: str = None):
         if type == "text":
             text_payload = await self._filter_text_groups(text_metadata, group_id, type="version")
             if text_payload is None:
@@ -161,7 +143,8 @@ class TextGroupsService:
                     log_group_id=log_group_id,
                 )
         else:
-            text_payload = await self._filter_text_groups(text_metadata, group_id, type="commentary")
+            text_payload = await self._filter_text_groups(text_metadata, group_id, type="commentary", commentary_group_id=commentary_group_id)
+
             if text_payload is None:
                 return
             instance_id = text_payload.pecha_text_id
@@ -250,7 +233,7 @@ class TextGroupsService:
         return await get_texts(type)
 
     async def _filter_text_groups(
-        self, text: dict[str, Any], group_id: str | None, type: str
+        self, text: dict[str, Any], group_id: str | None, type: str, commentary_group_id: str = None
     ) -> TextGroupPayload:
         # Fetch critical instances for this text so we can map ID and source.
         critical_instances_list = await get_critical_instances(text["id"])
@@ -266,6 +249,8 @@ class TextGroupsService:
             raw_title = title
             break
 
+    
+
         # Look up the collection ID from collection_upload_log by category_id (pecha_collection_id)
         category_ids = []
         if text["category_id"] and type == "version":
@@ -273,7 +258,7 @@ class TextGroupsService:
             category_ids.append(id)
         elif text["category_id"] and type == "commentary":
             # Get version_group_id from CSV by matching category_id
-            version_group_id = get_version_group_id_by_category_id(text["category_id"])
+            version_group_id = commentary_group_id
             if version_group_id:
                 category_ids.append(version_group_id)
         

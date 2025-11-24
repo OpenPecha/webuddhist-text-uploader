@@ -152,9 +152,9 @@ def get_log_group_id_by_pecha_text_id(pecha_text_id: str) -> str | None:
         for row in reader:
             # Check both 'pecha_text_id' and 'pecha' columns for compatibility
             if (row.get("pecha_text_id") == pecha_text_id):
-                log_group_id = row.get("log_group_id")
-                if log_group_id:
-                    return log_group_id
+                version_group_id = row.get("version_group_id")
+                if version_group_id:
+                    return version_group_id
 
     return None
 
