@@ -44,6 +44,7 @@ class SegmentService:
                 segments_ids = [segment["id"] for segment in annotation_sengments["data"]]
                 print(f"{pecha_text_id} annotation_ids length >>>>>>>>>>>>>>>>>",len(segments_ids))
                 # Process segment_ids in batches to manage batch size
+                
                 # segments_contents = await self.make_batch_segments_content(segments_ids, pecha_text_id)
                 segments_contents = self.parse_segments_content(annotation_sengments["data"], instance['content'])
                 if self.is_segments_already_uploaded(text_id):

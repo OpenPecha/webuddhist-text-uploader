@@ -103,7 +103,7 @@ def _ensure_log_file() -> None:
     return
 
 
-def has_been_uploaded(pecha_text_id: str, text_type: str) -> bool:
+def has_been_uploaded_by_instance_id(instance_id: str, text_type: str) -> bool:
 
     if not LOG_PATH.exists():
         return False
@@ -112,12 +112,50 @@ def has_been_uploaded(pecha_text_id: str, text_type: str) -> bool:
         reader = csv.DictReader(f)
         for row in reader:
             if (
-                row.get("pecha_text_id") == pecha_text_id
+                row.get("instance_id") == instance_id
                 and row.get("text_type") == text_type
             ):
                 return True
 
     return False
+
+
+def has_been_uploaded_by_pecha_text_id(pecha_text_id: str) -> bool:
+    """
+    Check if a text with the given pecha_text_id has already been uploaded.
+    Returns True if the pecha_text_id exists in the upload log, False otherwise.
+    """
+    if not LOG_PATH.exists():
+        return False
+
+    with LOG_PATH.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Check both 'pecha_text_id' and 'pecha' columns for compatibility
+            if row.get("pecha_text_id") == pecha_text_id or row.get("pecha") == pecha_text_id:
+                return True
+
+    return False
+
+
+def get_log_group_id_by_pecha_text_id(pecha_text_id: str) -> str | None:
+    """
+    Get the log_group_id for a given pecha_text_id from the upload log.
+    Returns the log_group_id if found, None otherwise.
+    """
+    if not LOG_PATH.exists():
+        return None
+
+    with LOG_PATH.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Check both 'pecha_text_id' and 'pecha' columns for compatibility
+            if (row.get("pecha_text_id") == pecha_text_id or row.get("pecha") == pecha_text_id):
+                log_group_id = row.get("log_group_id")
+                if log_group_id:
+                    return log_group_id
+
+    return None
 
 
 def has_title_been_uploaded(title: str) -> bool:
@@ -174,6 +212,7 @@ def get_version_group_id_by_log_group_and_category(log_group_id: str, category_i
 
 
 def log_uploaded_text(
+    instance_id: str,
     pecha_text_id: str,
     text_type: str,
     text_id: str | None = None,
@@ -191,6 +230,7 @@ def log_uploaded_text(
         writer = csv.writer(f)
         writer.writerow(
             [
+                instance_id,
                 pecha_text_id,
                 text_id or "",
                 text_type,
