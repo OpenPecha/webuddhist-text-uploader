@@ -21,13 +21,13 @@ async def pipeline():
     print("text group uploaded successfully")
 
     #segment upload
-    segment = SegmentService()
-    await segment.upload_segments()
+    # segment = SegmentService()
+    # await segment.upload_segments()
     print("segment uploaded successfully")  
 
     #toc upload
-    # toc = TocService()
-    # await toc.upload_toc()
+    toc = TocService()
+    await toc.upload_toc()
     print("toc uploaded successfully")
 
     #trigger mapping service
