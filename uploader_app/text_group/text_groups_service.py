@@ -57,14 +57,14 @@ class TextGroupsService:
             # text_id = "pAQMRjNs2fRIrkGoehsnk"
             text_related_by_work_response = await get_text_related_by_work(text_id)
             for key in text_related_by_work_response.keys():
-                if text_related_by_work_response[key]["relation"] is not 'commentary':
+                if text_related_by_work_response[key]["relation"] not in ['commentary', 'sibling_commentary']:
                     work_translation_group[key] = text_related_by_work_response[key]["expression_ids"]
                     expression_ids = text_related_by_work_response[key]["expression_ids"]
                     related_text_ids = expression_ids
                 else:
                     commentary_ids = text_related_by_work_response[key]["expression_ids"]
                     commentary_text_ids = commentary_ids
-            if text["type"] is not 'commentary':
+            if text["type"] not in ['commentary', 'sibling_commentary']:
                 related_text_ids.append(text_id)
             else:
                 commentary_text_ids.append(text_id)
@@ -88,6 +88,8 @@ class TextGroupsService:
             
         else:
             log_group_id = None
+        
+        
             
         for text_id in text_ids:
             text_metadata = await get_text_metadata(text_id)

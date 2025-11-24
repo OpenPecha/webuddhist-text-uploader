@@ -139,7 +139,6 @@ class CollectionService:
 
         return multilingual_payloads
 
-
     def build_multilingual_payload(
         self, collections_by_language: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
