@@ -32,17 +32,17 @@ class SegmentService:
         text_pairs = await self.get_pecha_text_ids_from_csv()
 
         try:
-            for pecha_text_id, text_id in text_pairs:
+            for instance_id, text_id in text_pairs:
                 # Check if segments for this text_id have already been uploaded
                 if self.is_segments_already_uploaded(text_id):
                     print(f"Segments for text_id {text_id} already uploaded. Skipping...")
                     continue
                 
-                instance = await self.get_segments_annotation_by_pecha_text_id(pecha_text_id)
+                instance = await self.get_segments_annotation_by_pecha_text_id(instance_id)
                 annotation_ids = self.get_annotation_ids(instance)
                 annotation_sengments = await get_segments_id_by_annotation_id(annotation_ids[0])
                 segments_ids = [segment["id"] for segment in annotation_sengments["data"]]
-                print(f"{pecha_text_id} annotation_ids length >>>>>>>>>>>>>>>>>",len(segments_ids))
+                print(f"{instance_id} annotation_ids length >>>>>>>>>>>>>>>>>",len(segments_ids))
                 # Process segment_ids in batches to manage batch size
                 
                 # segments_contents = await self.make_batch_segments_content(segments_ids, pecha_text_id)
@@ -137,10 +137,10 @@ class SegmentService:
         with LOG_PATH.open("r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                pecha_text_id = row["pecha_text_id"]
+                instance_id = row["instance_id"]
                 text_id = row["text_id"]
-                if pecha_text_id and text_id:
-                    pecha_ids.append((pecha_text_id, text_id))
+                if instance_id and text_id:
+                    pecha_ids.append((instance_id, text_id))
 
         return pecha_ids
 

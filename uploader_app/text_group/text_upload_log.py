@@ -10,6 +10,7 @@ LOG_PATH = Path(TEXT_UPLOAD_LOG_FILE)
 # existing fields the same for backwards compatibility with readers that only
 # care about `pecha_text_id` and `text_type`.
 LOG_HEADER = [
+    "instance_id",
     "pecha_text_id",
     "text_id",
     "text_type",

@@ -2,7 +2,7 @@ from enum import Enum
 
 import os
 
-ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNhbmR1cGxvYnphbmdAZ21haWwuY29tIiwibmFtZSI6ImxvYnphbmcgc2FtZHVwIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2MzgxMzYzOSwiZXhwIjoxNzgxODEzNjM5fQ.Shu4ssvMABGoMHrp-mgwPrxpZXzqZppr147-IMhUhD8"
+ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWlucGVjaGFAZ21haWwuY29tIiwibmFtZSI6ImFkbWluIHBlY2hhIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2Mzk2OTg1MiwiZXhwIjoxNzY1NzY5ODUyfQ.V0H88xbGk0bEwW_lNEIVV3bOzka4whn60TY7WxMfKGc"
 
 APPLICATION = "webuddhist"
 
@@ -24,12 +24,12 @@ VERSION_TEXT_TYPE = [TextType.TRANSLATION.value, TextType.ROOT.value, TextType.T
 
 
 class OpenPechaAPIURL(Enum):
-    DEVELOPMENT = "https://api-kwgjscy6gq-uc.a.run.app"
+    DEVELOPMENT = "https://api-aq25662yyq-uc.a.run.app"
 
 class SQSURL(Enum):
     DEVELOPMENT = "https://sqs-uploader-service.onrender.com"
 
 
 class DestinationURL(Enum):
-    LOCAL = "https://webuddhist-tst-backend.onrender.com/api/v1"
+    LOCAL = "https://api.webuddhist.com/api/v1"
 
