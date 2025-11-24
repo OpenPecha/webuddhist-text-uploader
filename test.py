@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
 # MongoDB connection string
-MONGO_URI = "mongodb+srv://webuddhist_db_user:JkasiqFZoQ4eLDVr@webuddhist-tst.b1zlfci.mongodb.net/"
+MONGO_URI = "mongodb+srv://webuddhist_db_user:os9meNVni6FqC7if@webuddhist-prd.stty4w4.mongodb.net/"
 
 # Database name (update this if different)
 DB_NAME = "webuddhist"
@@ -14,7 +14,7 @@ db = client[DB_NAME]
 segments_collection = db['Segment']
 
 # Text ID to delete
-text_id_to_delete = "84ad8120-fdbc-447e-aac6-0315ba0b040a"
+text_id_to_delete = "10f887e9-1ad1-443f-a73b-dba1623e51b4"
 
 # Delete documents with the specified text_id
 result = segments_collection.delete_many({"text_id": text_id_to_delete})

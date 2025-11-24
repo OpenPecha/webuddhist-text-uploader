@@ -151,7 +151,7 @@ def get_log_group_id_by_pecha_text_id(pecha_text_id: str) -> str | None:
         reader = csv.DictReader(f)
         for row in reader:
             # Check both 'pecha_text_id' and 'pecha' columns for compatibility
-            if (row.get("pecha_text_id") == pecha_text_id or row.get("pecha") == pecha_text_id):
+            if (row.get("pecha_text_id") == pecha_text_id):
                 log_group_id = row.get("log_group_id")
                 if log_group_id:
                     return log_group_id
