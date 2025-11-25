@@ -14,7 +14,7 @@ db = client[DB_NAME]
 segments_collection = db['Segment']
 
 # Text ID to delete
-text_id_to_delete = "10f887e9-1ad1-443f-a73b-dba1623e51b4"
+text_id_to_delete = "40570266-5996-412f-aa70-e9d145183434"
 
 # Delete documents with the specified text_id
 result = segments_collection.delete_many({"text_id": text_id_to_delete})
