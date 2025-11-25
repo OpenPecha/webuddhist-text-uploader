@@ -120,6 +120,11 @@ async def get_manifestation_by_text_id(text_id: str) -> dict[str, Any]:
     url = f"{SQSURL.DEVELOPMENT.value}/relation/{text_id}"
 
     response = await asyncio.to_thread(requests.post, url)
+    
+    # Ignore 400 status codes
+    if response.status_code == 400:
+        return {}
+    
     response.raise_for_status()
     return response.json()
 
