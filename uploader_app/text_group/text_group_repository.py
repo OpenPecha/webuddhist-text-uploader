@@ -22,6 +22,18 @@ async def get_texts(type: str | None = None, limit: int | None = None, offset: i
     return response.json()
 
 
+async def get_texts_by_category(category_id: str) -> list[dict[str, Any]]:
+    texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/categories/{category_id}/texts"
+    params = {
+        "type": type,
+        "limit": 100,
+        "offset": 0,
+    }
+    response = await asyncio.to_thread(requests.get, texts_url, params=params)
+    response.raise_for_status()
+    return response.json()
+
+
 async def get_related_texts(text_id: str) -> list[dict[str, Any]]:
     related_texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/instances/{text_id}/related"
     response = await asyncio.to_thread(requests.get, related_texts_url)
