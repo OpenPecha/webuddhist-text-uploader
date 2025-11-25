@@ -26,8 +26,8 @@ async def pipeline():
     print("segment uploaded successfully")  
 
     #toc upload
-    # toc = TocService()
-    # await toc.upload_toc()
+    toc = TocService()
+    await toc.upload_toc()
     print("toc uploaded successfully")
 
     #trigger mapping service

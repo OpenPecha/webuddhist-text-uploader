@@ -42,11 +42,11 @@ class TextGroupsService:
 
     async def upload_tests_new_service(self):
 
-        # texts = await self.get_texts_service()
-        text_by_category = await get_texts_by_category('dJpr4gMF72E4UpCnJ84sh')
+        texts = await self.get_texts_service()
+        # text_by_category = await get_texts_by_category('dJpr4gMF72E4UpCnJ84sh')
 
-        for text_category in text_by_category:
-            text = text_category["text_metadata"]
+        for text in texts:
+            # text = text_category["text_metadata"]
         
             # Clear category dictionary for each new text being processed
             self.category = {}
@@ -54,7 +54,6 @@ class TextGroupsService:
             related_text_ids = []
             commentary_text_ids = []
             work_translation_group = {}
-            # text_id = text["id"]
             text_id = text["id"]
 
             # Skip if this pecha_text_id has already been uploaded
