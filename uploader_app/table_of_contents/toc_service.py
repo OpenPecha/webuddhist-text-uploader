@@ -4,7 +4,8 @@ import uuid
 from uploader_app.segments.segment_service import SegmentService
 from uploader_app.table_of_contents.toc_repository import post_toc
 from uploader_app.table_of_contents.toc_upload_log import log_uploaded_toc, is_toc_uploaded
-from uploader_app.config import TEXT_UPLOAD_LOG_FILE
+from uploader_app.config import TEXT_UPLOAD_LOG_FILE, MAX_PROCESSING_CONCURRENCY
+import multiprocessing
 
 
 class TocService:
@@ -12,6 +13,7 @@ class TocService:
         self.segment_service = SegmentService()
 
     async def upload_toc(self):
+        payloads = []
         text_pairs = await self.segment_service.get_pecha_text_ids_from_csv()
 
         for pecha_text_id, text_id in text_pairs:
@@ -27,11 +29,19 @@ class TocService:
             create_toc_payload = await self.create_toc_payload(ordered_segments, text_id)
             
             
-            response = await post_toc(create_toc_payload)
-            print("toc uploaded successfully>>>>>>>>>>>>>>>>>",response["_id"])
+            # response = await post_toc(create_toc_payload)
+            payloads.append(create_toc_payload)
+            # print("toc uploaded successfully>>>>>>>>>>>>>>>>>",response["_id"])
+
+
             
         
             # Log the uploaded TOC
+        with multiprocessing.Pool(processes=MAX_PROCESSING_CONCURRENCY) as pool:
+            responses = pool.map(post_toc, payloads)
+
+        for response in responses:
+            print("toc uploaded successfully>>>>>>>>>>>>>>>>>",response["_id"])
             log_uploaded_toc(
                 pecha_text_id=pecha_text_id,
                 id=response.get("_id"),

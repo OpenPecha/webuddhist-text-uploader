@@ -6,8 +6,8 @@ from typing import Any, List
 from pathlib import Path
 from datetime import datetime
 import requests
-from uploader_app.config import SQSURL
-
+from uploader_app.config import SQSURL, MAX_PROCESSING_CONCURRENCY
+import multiprocessing
 
 from uploader_app.segments.segment_respository import (
     get_segments_annotation,
@@ -84,6 +84,7 @@ class SegmentService:
         """
         batch_size = 200  # Adjust batch size as needed
         total_segments = len(segments_content)
+        payloads = []
         
         print(f"Posting {total_segments} segments in batches of {batch_size}...")
         
@@ -102,9 +103,11 @@ class SegmentService:
                     } for segment in batch
                 ]
             }
-            
+            payloads.append(payload)
             print(f"Posting batch {batch_number}/{total_batches} ({len(batch)} segments)...")
-            await post_segments(payload)
+
+        with multiprocessing.Pool(processes=MAX_PROCESSING_CONCURRENCY) as pool:
+            pool.map(post_segments, payloads)
 
 
     async def _get_segments_content(self, segment_ids: List[str], pecha_text_id: str) -> List[dict[str, Any]]:

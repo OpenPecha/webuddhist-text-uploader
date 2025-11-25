@@ -33,3 +33,5 @@ class SQSURL(Enum):
 class DestinationURL(Enum):
     LOCAL = "https://api.webuddhist.com/api/v1"
 
+MAX_PROCESSING_CONCURRENCY = 4
+
