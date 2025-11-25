@@ -13,7 +13,8 @@ from uploader_app.text_group.text_group_repository import (
     get_related_texts,
     get_text_instances,
     get_text_related_by_work,
-    get_text_metadata
+    get_text_metadata,
+    get_texts_by_category
 )
 from uploader_app.collection.collection_repository import get_collection_by_pecha_collection_id
 from uploader_app.config import TextType
@@ -41,9 +42,11 @@ class TextGroupsService:
 
     async def upload_tests_new_service(self):
 
-        texts = await self.get_texts_service()
+        # texts = await self.get_texts_service()
+        text_by_category = await get_texts_by_category('dJpr4gMF72E4UpCnJ84sh')
 
-        for text in texts:
+        for text_category in text_by_category:
+            text = text_category["text_metadata"]
         
             # Clear category dictionary for each new text being processed
             self.category = {}
@@ -51,6 +54,7 @@ class TextGroupsService:
             related_text_ids = []
             commentary_text_ids = []
             work_translation_group = {}
+            # text_id = text["id"]
             text_id = text["id"]
 
             # Skip if this pecha_text_id has already been uploaded
@@ -258,6 +262,9 @@ class TextGroupsService:
             version_group_id = commentary_group_id
             if version_group_id:
                 category_ids.append(version_group_id)
+
+        if 'Translation' in raw_title:
+            raw_title = raw_title.replace('(Translation)', '').replace("Translation", "༼ཁ་སྐད།༽")
         
         return TextGroupPayload(
             pecha_text_id=critical_instance["id"],
