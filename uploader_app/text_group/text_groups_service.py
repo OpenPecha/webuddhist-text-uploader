@@ -263,7 +263,7 @@ class TextGroupsService:
                 category_ids.append(version_group_id)
 
         if 'Translation' in raw_title:
-            raw_title = raw_title.replace('(Translation)', '').replace("Translation", "༼ཁ་སྐད།༽")
+            raw_title = raw_title.replace("Translation", "༼ཁ་སྐད།༽")
         
         return TextGroupPayload(
             pecha_text_id=critical_instance["id"],

@@ -14,7 +14,7 @@ async def get_texts(type: str | None = None, limit: int | None = None, offset: i
     params = {
         "type": type,
         "limit": 100,
-        "offset": 400,
+        "offset": 500,
     }
     response = await asyncio.to_thread(requests.get, texts_url, params=params)
     response.raise_for_status()

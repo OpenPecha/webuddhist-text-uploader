@@ -31,8 +31,8 @@ async def pipeline():
     print("toc uploaded successfully")
 
     #trigger mapping service
-    # mapping = MappingService()
-    # await mapping.trigger_mapping_service()
+    mapping = MappingService()
+    await mapping.trigger_mapping_service()
     print("mapping triggered successfully")
 
 
