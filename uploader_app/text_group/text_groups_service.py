@@ -50,36 +50,32 @@ class TextGroupsService:
             text = cat_text["text_metadata"]
         
             # Clear category dictionary for each new text being processed
-            self.category = {}
-
-            related_text_ids = []
-            commentary_text_ids = []
-            work_translation_group = {}
-            text_id = text["id"]
-
-            # Skip if this pecha_text_id has already been uploaded
-            if has_been_uploaded_by_pecha_text_id(text_id):
-                print(f"Skipping already uploaded text with pecha_text_id: {text_id}")
-                continue
-
-            text_related_by_work_response = await get_text_related_by_work(text_id)
-            for key in text_related_by_work_response.keys():
-                if text_related_by_work_response[key]["relation"] not in ['commentary', 'sibling_commentary']:
-                    work_translation_group[key] = text_related_by_work_response[key]["expression_ids"]
-                    expression_ids = text_related_by_work_response[key]["expression_ids"]
-                    related_text_ids.extend(expression_ids)
-                else:
-                    commentary_ids = text_related_by_work_response[key]["expression_ids"]
-                    commentary_text_ids.extend(commentary_ids)
-            if text["type"] not in ['commentary', 'sibling_commentary']:
-                related_text_ids.append(text_id)
+        self.category = {}
+        related_text_ids = []
+        commentary_text_ids = []
+        work_translation_group = {}
+        text_id = "vtQIO3HcP1nOa4cf50lLH"
+        # Skip if this pecha_text_id has already been uploaded
+        if has_been_uploaded_by_pecha_text_id(text_id):
+            print(f"Skipping already uploaded text with pecha_text_id: {text_id}")
+            return
+        text_related_by_work_response = await get_text_related_by_work(text_id)
+        for key in text_related_by_work_response.keys():
+            if text_related_by_work_response[key]["relation"] not in ['commentary', 'sibling_commentary']:
+                work_translation_group[key] = text_related_by_work_response[key]["expression_ids"]
+                expression_ids = text_related_by_work_response[key]["expression_ids"]
+                related_text_ids.extend(expression_ids)
             else:
-                commentary_text_ids.append(text_id)
-
-            print("related_text_ids:>>>>>>>>>>>" , related_text_ids)
-            print("commentary_text_ids:>>>>>>>>>>>" , commentary_text_ids)
-            version_group_id = await self.get_text_meta_data_service(related_text_ids, "translation")
-            await self.get_text_meta_data_service(commentary_text_ids, "commentary", category_group_id=version_group_id)
+                commentary_ids = text_related_by_work_response[key]["expression_ids"]
+                commentary_text_ids.extend(commentary_ids)
+        if text["type"] not in ['commentary', 'sibling_commentary']:
+            related_text_ids.append(text_id)
+        else:
+            commentary_text_ids.append(text_id)
+        print("related_text_ids:>>>>>>>>>>>" , related_text_ids)
+        print("commentary_text_ids:>>>>>>>>>>>" , commentary_text_ids)
+        version_group_id = await self.get_text_meta_data_service(related_text_ids, "translation")
+        await self.get_text_meta_data_service(commentary_text_ids, "commentary", category_group_id=version_group_id)
 
 
     async def get_text_meta_data_service(self, text_ids: List[str], type: str, category_group_id: str = None):
