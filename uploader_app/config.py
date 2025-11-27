@@ -2,7 +2,7 @@ from enum import Enum
 
 import os
 
-ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWlucGVjaGFAZ21haWwuY29tIiwibmFtZSI6ImFkbWluIHBlY2hhIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2Mzk2OTg1MiwiZXhwIjoxNzY1NzY5ODUyfQ.V0H88xbGk0bEwW_lNEIVV3bOzka4whn60TY7WxMfKGc"
+ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWlucGVjaGFAZ21haWwuY29tIiwibmFtZSI6InBlY2hhIGFkbWluIiwiaXNzIjoiaHR0cHM6Ly9wZWNoYS12Mi5vcmciLCJhdWQiOiJodHRwczovL3BlY2hhLXYyLm9yZyIsImlhdCI6MTc2NDE4MjAwNCwiZXhwIjoxNzgyMTgyMDA0fQ.Boc--ealpA7yM-F4TAVFtQv25zWcMETd1Uk5Pipo7cQ"
 
 APPLICATION = "webuddhist"
 
@@ -31,5 +31,5 @@ class SQSURL(Enum):
 
 
 class DestinationURL(Enum):
-    LOCAL = "https://api.webuddhist.com/api/v1"
+    LOCAL = "https://webuddhist-tst-backend.onrender.com/api/v1"
 

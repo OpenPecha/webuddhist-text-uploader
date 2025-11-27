@@ -25,7 +25,7 @@ async def get_texts(type: str | None = None, limit: int | None = None, offset: i
 async def get_texts_by_category(category_id: str) -> list[dict[str, Any]]:
     texts_url = f"{OpenPechaAPIURL.DEVELOPMENT.value}/v2/categories/{category_id}/texts"
     params = {
-        "type": type,
+        "instance_type": 'critical',
         "limit": 100,
         "offset": 0,
     }

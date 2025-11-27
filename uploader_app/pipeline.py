@@ -15,8 +15,8 @@ async def pipeline():
     print("collection uploaded successfully")
 
     # # text group upload
-    # text_group = TextGroupsService()
-    # await text_group.upload_tests_new_service()
+    text_group = TextGroupsService()
+    await text_group.upload_tests_new_service()
 
     print("text group uploaded successfully")
 
@@ -31,8 +31,8 @@ async def pipeline():
     print("toc uploaded successfully")
 
     #trigger mapping service
-    mapping = MappingService()
-    await mapping.trigger_mapping_service()
+    # mapping = MappingService()
+    # await mapping.trigger_mapping_service()
     print("mapping triggered successfully")
 
 

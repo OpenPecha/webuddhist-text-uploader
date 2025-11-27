@@ -42,11 +42,12 @@ class TextGroupsService:
 
     async def upload_tests_new_service(self):
 
-        texts = await self.get_texts_service()
-        # text_by_category = await get_texts_by_category('dJpr4gMF72E4UpCnJ84sh')
+        # texts = await self.get_texts_service()
+        text_by_category = await get_texts_by_category('dJpr4gMF72E4UpCnJ84sh')
 
-        for text in texts:
-            # text = text_category["text_metadata"]
+
+        for cat_text in text_by_category:
+            text = cat_text["text_metadata"]
         
             # Clear category dictionary for each new text being processed
             self.category = {}
