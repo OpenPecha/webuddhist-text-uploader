@@ -12,7 +12,5 @@ env/
 
 # Database dumps
 dump/
-*.bson
-*.json.gz
 
 
