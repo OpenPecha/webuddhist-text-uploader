@@ -16,3 +16,5 @@ class TextGroupPayload(BaseModel):
     source_link: Optional[str] = None
     ranking: Optional[int] = None
     license: Optional[str] = None
+
+
