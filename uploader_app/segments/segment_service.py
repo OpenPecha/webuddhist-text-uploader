@@ -82,7 +82,7 @@ class SegmentService:
         """
         Create and post segments in batches to avoid payload size limits.
         """
-        batch_size = 200  # Adjust batch size as needed
+        batch_size = 400  # Adjust batch size as needed
         total_segments = len(segments_content)
         
         print(f"Posting {total_segments} segments in batches of {batch_size}...")
