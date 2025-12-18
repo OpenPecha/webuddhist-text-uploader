@@ -9,8 +9,3 @@ venv/
 env/
 
 .env
-
-# Database dumps
-dump/
-
-
